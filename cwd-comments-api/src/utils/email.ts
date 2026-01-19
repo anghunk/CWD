@@ -120,12 +120,25 @@ export async function sendCommentNotification(
     return;
   }
 
-  await env.SEND_EMAIL.send({
-    to: [{ email: toEmail }],
-    from: { email: env.CF_FROM_EMAIL },
-    subject: `新评论通知：${postTitle}`,
-    html
+  console.log('EmailAdminNotification:send:start', {
+    to: toEmail,
+    from: env.CF_FROM_EMAIL
   });
+  try {
+    await env.SEND_EMAIL.send({
+      to: [toEmail],
+      from: env.CF_FROM_EMAIL,
+      subject: `新评论通知：${postTitle}`,
+      html
+    });
+  } catch (sendError: any) {
+    console.error('EmailAdminNotification:send:error', {
+      error: sendError.message,
+      to: toEmail,
+      from: env.CF_FROM_EMAIL
+    });
+    throw sendError;
+    }
 
   console.log('EmailAdminNotification:sent', {
     toEmail
@@ -140,16 +153,22 @@ async function getAdminNotifyEmail(env: Bindings): Promise<string> {
     .bind('admin_notify_email')
     .first<{ value: string }>();
   if (row?.value && isValidEmail(row.value)) {
+    const cleanEmail = row.value.trim();
     console.log('EmailAdminNotification:useDbEmail', {
-      email: row.value
+      email: cleanEmail,
+      originalLength: row.value.length,
+      cleanLength: cleanEmail.length
     });
-    return row.value;
+    return cleanEmail;
   }
   if (env.EMAIL_ADDRESS && isValidEmail(env.EMAIL_ADDRESS)) {
+    const cleanEmail = env.EMAIL_ADDRESS.trim();
     console.log('EmailAdminNotification:useEnvEmail', {
-      email: env.EMAIL_ADDRESS
+      email: cleanEmail,
+      originalLength: env.EMAIL_ADDRESS.length,
+      cleanLength: cleanEmail.length
     });
-    return env.EMAIL_ADDRESS;
+    return cleanEmail;
   }
   console.error('EmailAdminNotification:noAdminEmail', {
     dbValue: row?.value,
