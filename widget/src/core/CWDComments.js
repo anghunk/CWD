@@ -151,7 +151,7 @@ export class CWDComments {
 			if (serverConfig.avatarPrefix) {
 				this.config.avatarPrefix = serverConfig.avatarPrefix;
 			}
-			if (serverConfig.adminEnabled && serverConfig.adminEmail) {
+			if (serverConfig.adminEmail) {
 				this.config.adminEmail = serverConfig.adminEmail;
 			}
 			if (serverConfig.adminEnabled && serverConfig.adminBadge) {

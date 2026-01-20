@@ -8,6 +8,11 @@ export class AdminAuthModal extends Component {
       error: '',
       loading: false
     };
+    this.elements = {
+      input: null,
+      error: null,
+      submitBtn: null
+    };
   }
 
   render() {
@@ -71,14 +76,48 @@ export class AdminAuthModal extends Component {
     this.empty(this.container);
     this.container.appendChild(overlay);
     
-    // Focus input
-    const input = overlay.querySelector('input');
+    this.elements.input = overlay.querySelector('input');
+    this.elements.error = overlay.querySelector('.cwd-error-text');
+    this.elements.submitBtn = overlay.querySelector('.cwd-btn-primary');
+
+    this.update();
+
+    const input = this.elements.input;
     if (input) setTimeout(() => input.focus(), 50);
   }
   
   setState(newState) {
       this.state = { ...this.state, ...newState };
-      this.render();
+      this.update();
+  }
+
+  update() {
+    const { key, error, loading } = this.state;
+
+    if (this.elements.input) {
+      this.elements.input.value = key;
+      this.elements.input.disabled = loading;
+      if (error) {
+        this.elements.input.classList.add('cwd-input-error');
+      } else {
+        this.elements.input.classList.remove('cwd-input-error');
+      }
+    }
+
+    if (this.elements.error) {
+      if (error) {
+        this.elements.error.textContent = error;
+        this.elements.error.style.display = '';
+      } else {
+        this.elements.error.textContent = '';
+        this.elements.error.style.display = 'none';
+      }
+    }
+
+    if (this.elements.submitBtn) {
+      this.elements.submitBtn.disabled = loading || !key;
+      this.elements.submitBtn.textContent = loading ? '验证中...' : '验证';
+    }
   }
 
   handleSubmit() {

@@ -31,8 +31,8 @@ export class CommentForm extends Component {
 		const { localForm } = this.state;
 
 		const canSubmit = localForm.name.trim() && localForm.email.trim() && localForm.content.trim();
-        const isAdmin = this.props.adminEmail && localForm.email.trim() === this.props.adminEmail;
-        const isVerified = isAdmin && auth.hasToken();
+		const isAdmin = this.props.adminEmail && localForm.email.trim() === this.props.adminEmail;
+		const isVerified = isAdmin && auth.hasToken();
 
 		const root = this.createElement('form', {
 			className: 'cwd-comment-form',
@@ -55,30 +55,31 @@ export class CommentForm extends Component {
 								// 昵称
 								this.createFormField('昵称 *', 'text', 'name', localForm.name, formErrors.name),
 								// 邮箱
-                                this.createElement('div', {
-                                    className: 'cwd-form-field-wrapper',
-                                    children: [
-                                        this.createFormField('邮箱 *', 'email', 'email', localForm.email, formErrors.email),
-                                        isVerified ? this.createElement('div', {
-                                            className: 'cwd-admin-controls',
-                                            children: [
-                                                this.createTextElement('span', '✓ 已验证', 'cwd-admin-verified'),
-                                                this.createElement('button', {
-                                                    className: 'cwd-btn-text',
-                                                    text: '退出',
-                                                    attributes: {
-                                                        type: 'button',
-                                                        title: '清除管理员凭证',
-                                                        onClick: () => {
-                                                            auth.clearToken();
-                                                            this.render();
-                                                        }
-                                                    }
-                                                })
-                                            ]
-                                        }) : null
-                                    ]
-                                }),
+								this.createElement('div', {
+									className: 'cwd-form-field-wrapper',
+									children: [
+										this.createFormField('邮箱 *', 'email', 'email', localForm.email, formErrors.email),
+										isVerified
+											? this.createElement('div', {
+													className: 'cwd-admin-controls',
+													children: [
+														this.createElement('button', {
+															className: 'cwd-btn-text',
+															text: '退出验证',
+															attributes: {
+																type: 'button',
+																title: '清除管理员凭证',
+																onClick: () => {
+																	auth.clearToken();
+																	this.render();
+																},
+															},
+														}),
+													],
+												})
+											: null,
+									],
+								}),
 								// 网址
 								this.createFormField('网址', 'url', 'url', localForm.url, formErrors.url),
 							],
@@ -248,7 +249,7 @@ export class CommentForm extends Component {
 						onInput: (e) => this.handleFieldChange(fieldName, e.target.value),
 						onBlur: (e) => {
 							if (fieldName === 'email') this.handleEmailBlur(e.target.value);
-						}
+						},
 					},
 				}),
 				...(error ? [this.createTextElement('span', error, 'cwd-error-text')] : []),
@@ -324,7 +325,7 @@ export class CommentForm extends Component {
 					this.modal.destroy();
 					this.modal = null;
 				}
-			}
+			},
 		});
 		this.modal.render();
 	}
