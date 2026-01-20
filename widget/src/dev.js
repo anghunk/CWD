@@ -25,9 +25,7 @@ function loadConfigFromStorage() {
 		if (saved) {
 			return { ...DEFAULT_CONFIG, ...JSON.parse(saved) };
 		}
-	} catch (e) {
-		console.warn('[CWDComments] 读取本地存储失败:', e);
-	}
+	} catch (e) {}
 	return DEFAULT_CONFIG;
 }
 
@@ -37,9 +35,7 @@ function loadConfigFromStorage() {
 function saveConfigToStorage(config) {
 	try {
 		localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
-	} catch (e) {
-		console.warn('[CWDComments] 保存到本地存储失败:', e);
-	}
+	} catch (e) {}
 }
 
 /**
@@ -94,10 +90,7 @@ async function initWidget() {
 			pageSize: 20,
 		});
 		widgetInstance.mount();
-		console.log('[CWDComments] Widget 初始化成功', config);
-	} catch (error) {
-		console.error('[CWDComments] Widget 初始化失败:', error);
-	}
+	} catch (error) {}
 }
 
 /**
@@ -105,7 +98,6 @@ async function initWidget() {
  */
 function toggleTheme() {
 	if (!widgetInstance) {
-		console.warn('[CWDComments] 请先初始化 widget');
 		return;
 	}
 
@@ -123,8 +115,6 @@ function toggleTheme() {
 	const config = getConfigFromInputs();
 	config.theme = newTheme;
 	saveConfigToStorage(config);
-
-	console.log('[CWDComments] 主题已切换为:', newTheme);
 }
 
 /**
@@ -134,10 +124,7 @@ function clearConfig() {
 	try {
 		localStorage.removeItem(STORAGE_KEY);
 		populateInputs(DEFAULT_CONFIG);
-		console.log('[CWDComments] 配置已重置为默认值');
-	} catch (e) {
-		console.error('[CWDComments] 重置配置失败:', e);
-	}
+	} catch (e) {}
 }
 
 // 将函数挂载到 window 对象，使其在 HTML 中可访问
@@ -147,8 +134,6 @@ window.clearConfig = clearConfig;
 
 // 页面加载完成后自动初始化
 document.addEventListener('DOMContentLoaded', () => {
-	console.log('[CWDComments] 开发模式 - 页面加载完成，正在初始化...');
-
 	// 从本地存储加载配置并填充到输入框
 	const savedConfig = loadConfigFromStorage();
 	populateInputs(savedConfig);
