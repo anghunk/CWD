@@ -40,6 +40,12 @@ export type CommentSettingsResponse = {
 	adminEnabled: boolean;
 };
 
+export type EmailNotifySettingsResponse = {
+	globalEnabled: boolean;
+	adminEnabled: boolean;
+	userEnabled: boolean;
+};
+
 export async function loginAdmin(name: string, password: string): Promise<string> {
 	const res = await post<AdminLoginResponse>('/admin/login', { name, password });
 	const key = res.data.key;
@@ -69,6 +75,18 @@ export function fetchAdminEmail(): Promise<AdminEmailResponse> {
 
 export function saveAdminEmail(email: string): Promise<{ message: string }> {
 	return put<{ message: string }>('/admin/settings/email', { email });
+}
+
+export function fetchEmailNotifySettings(): Promise<EmailNotifySettingsResponse> {
+	return get<EmailNotifySettingsResponse>('/admin/settings/email-notify');
+}
+
+export function saveEmailNotifySettings(data: {
+	globalEnabled?: boolean;
+	adminEnabled?: boolean;
+	userEnabled?: boolean;
+}): Promise<{ message: string }> {
+	return put<{ message: string }>('/admin/settings/email-notify', data);
 }
 
 export function fetchCommentSettings(): Promise<CommentSettingsResponse> {

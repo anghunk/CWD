@@ -2,7 +2,11 @@ import { Hono } from 'hono';
 import { Bindings } from './bindings';
 import { customCors } from './utils/cors';
 import { adminAuth } from './utils/auth';
-import { isValidEmail } from './utils/email';
+import {
+	isValidEmail,
+	loadEmailNotificationSettings,
+	saveEmailNotificationSettings
+} from './utils/email';
 
 import { getComments } from './api/public/getComments';
 import { postComment } from './api/public/postComment';
@@ -115,11 +119,11 @@ app.use('*', async (c, next) => {
 });
 
 app.use('/api/*', async (c, next) => {
-	const corsMiddleware = customCors(c.env.ALLOW_ORIGIN);
+	const corsMiddleware = customCors();
 	return corsMiddleware(c, next);
 });
 app.use('/admin/*', async (c, next) => {
-	const corsMiddleware = customCors(c.env.ALLOW_ORIGIN);
+	const corsMiddleware = customCors();
 	return corsMiddleware(c, next);
 });
 
@@ -145,9 +149,37 @@ app.use('/admin/*', adminAuth);
 app.delete('/admin/comments/delete', deleteComment);
 app.get('/admin/comments/list', listComments);
 app.put('/admin/comments/status', updateStatus);
-// 设置接口
 app.get('/admin/settings/email', getAdminEmail);
 app.put('/admin/settings/email', setAdminEmail);
+app.get('/admin/settings/email-notify', async (c) => {
+	try {
+		const settings = await loadEmailNotificationSettings(c.env);
+		return c.json(settings);
+	} catch (e: any) {
+		return c.json({ message: e.message || '加载邮件通知配置失败' }, 500);
+	}
+});
+app.put('/admin/settings/email-notify', async (c) => {
+	try {
+		const body = await c.req.json();
+		const globalEnabled =
+			typeof body.globalEnabled === 'boolean' ? body.globalEnabled : undefined;
+		const adminEnabled =
+			typeof body.adminEnabled === 'boolean' ? body.adminEnabled : undefined;
+		const userEnabled =
+			typeof body.userEnabled === 'boolean' ? body.userEnabled : undefined;
+
+		await saveEmailNotificationSettings(c.env, {
+			globalEnabled,
+			adminEnabled,
+			userEnabled
+		});
+
+		return c.json({ message: '保存成功' });
+	} catch (e: any) {
+		return c.json({ message: e.message || '保存失败' }, 500);
+	}
+});
 app.get('/admin/settings/comments', async (c) => {
 	try {
 		const settings = await loadCommentSettings(c.env);

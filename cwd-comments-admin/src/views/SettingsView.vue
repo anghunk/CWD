@@ -42,6 +42,27 @@
       <div class="card">
         <h3 class="card-title">通知邮箱设置</h3>
         <div class="form-item">
+          <label class="form-label">开启邮件通知</label>
+          <label class="switch">
+            <input v-model="emailGlobalEnabled" type="checkbox" />
+            <span class="slider" />
+          </label>
+        </div>
+        <div class="form-item">
+          <label class="form-label">新评论通知管理员</label>
+          <label class="switch">
+            <input v-model="emailAdminEnabled" type="checkbox" />
+            <span class="slider" />
+          </label>
+        </div>
+        <div class="form-item">
+          <label class="form-label">评论回复通知用户</label>
+          <label class="switch">
+            <input v-model="emailUserEnabled" type="checkbox" />
+            <span class="slider" />
+          </label>
+        </div>
+        <div class="form-item">
           <label class="form-label">管理员通知邮箱</label>
           <input v-model="email" class="form-input" type="email" />
         </div>
@@ -69,9 +90,14 @@ import {
   saveAdminEmail,
   fetchCommentSettings,
   saveCommentSettings,
+  fetchEmailNotifySettings,
+  saveEmailNotifySettings,
 } from "../api/admin";
 
 const email = ref("");
+const emailGlobalEnabled = ref(true);
+const emailAdminEnabled = ref(true);
+const emailUserEnabled = ref(true);
 const commentAdminEmail = ref("");
 const commentAdminBadge = ref("");
 const avatarPrefix = ref("");
@@ -97,15 +123,19 @@ function showToast(msg: string, type: "success" | "error" = "success") {
 async function load() {
   loading.value = true;
   try {
-    const [notifyRes, commentRes] = await Promise.all([
+    const [notifyRes, commentRes, emailNotifyRes] = await Promise.all([
       fetchAdminEmail(),
       fetchCommentSettings(),
+      fetchEmailNotifySettings(),
     ]);
     email.value = notifyRes.email || "";
     commentAdminEmail.value = commentRes.adminEmail || "";
     commentAdminBadge.value = commentRes.adminBadge || "博主";
     avatarPrefix.value = commentRes.avatarPrefix || "";
     commentAdminEnabled.value = !!commentRes.adminEnabled;
+    emailGlobalEnabled.value = !!emailNotifyRes.globalEnabled;
+    emailAdminEnabled.value = !!emailNotifyRes.adminEnabled;
+    emailUserEnabled.value = !!emailNotifyRes.userEnabled;
   } catch (e: any) {
     message.value = e.message || "加载失败";
     messageType.value = "error";
@@ -123,8 +153,15 @@ async function saveEmail() {
   savingEmail.value = true;
   message.value = "";
   try {
-    const res = await saveAdminEmail(email.value);
-    showToast(res.message || "保存成功", "success");
+    const [emailRes] = await Promise.all([
+      saveAdminEmail(email.value),
+      saveEmailNotifySettings({
+        globalEnabled: emailGlobalEnabled.value,
+        adminEnabled: emailAdminEnabled.value,
+        userEnabled: emailUserEnabled.value,
+      }),
+    ]);
+    showToast(emailRes.message || "保存成功", "success");
   } catch (e: any) {
     message.value = e.message || "保存失败";
     messageType.value = "error";

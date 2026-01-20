@@ -30,7 +30,6 @@ onMounted(async () => {
   const comments = new window.CWDComments({
     el: commentsRoot.value,
     apiBaseUrl,
-    postSlug: window.location.pathname,
   });
 
   comments.mount();

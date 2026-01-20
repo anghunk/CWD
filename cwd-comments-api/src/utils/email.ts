@@ -4,9 +4,138 @@ export function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-/**
- * 回复通知邮件
- */
+const EMAIL_NOTIFY_GLOBAL_KEY = 'email_notify_enabled';
+const EMAIL_NOTIFY_ADMIN_KEY = 'email_notify_admin_enabled';
+const EMAIL_NOTIFY_USER_KEY = 'email_notify_user_enabled';
+
+type MailGatewayPayload = {
+  to: string[];
+  subject: string;
+  html: string;
+};
+
+async function dispatchMail(env: Bindings, payload: MailGatewayPayload) {
+  if (!env.MAIL_GATEWAY_URL) {
+    console.error('MailGateway:missingUrl');
+    return;
+  }
+
+  try {
+    const res = await fetch(env.MAIL_GATEWAY_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(env.MAIL_GATEWAY_TOKEN ? { 'X-Auth-Token': env.MAIL_GATEWAY_TOKEN } : {})
+      },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      console.error('MailGateway:sendFailed', {
+        status: res.status,
+        statusText: res.statusText
+      });
+    }
+  } catch (e: any) {
+    console.error('MailGateway:error', {
+      message: e?.message || String(e)
+    });
+  }
+}
+
+export type EmailNotificationSettings = {
+  globalEnabled: boolean;
+  adminEnabled: boolean;
+  userEnabled: boolean;
+};
+
+function parseEnabled(raw: string | undefined, defaultValue: boolean) {
+  if (raw === undefined) return defaultValue;
+  return raw === '1';
+}
+
+export async function loadEmailNotificationSettings(
+  env: Bindings
+): Promise<EmailNotificationSettings> {
+  await env.CWD_DB.prepare(
+    'CREATE TABLE IF NOT EXISTS Settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)'
+  ).run();
+
+  const keys = [EMAIL_NOTIFY_GLOBAL_KEY, EMAIL_NOTIFY_ADMIN_KEY, EMAIL_NOTIFY_USER_KEY];
+  const { results } = await env.CWD_DB.prepare(
+    'SELECT key, value FROM Settings WHERE key IN (?, ?, ?)'
+  )
+    .bind(...keys)
+    .all<{ key: string; value: string }>();
+
+  const map = new Map<string, string>();
+  for (const row of results) {
+    if (row && row.key) {
+      map.set(row.key, row.value);
+    }
+  }
+
+  const globalEnabled = parseEnabled(map.get(EMAIL_NOTIFY_GLOBAL_KEY), true);
+  const adminEnabled = parseEnabled(map.get(EMAIL_NOTIFY_ADMIN_KEY), true);
+  const userEnabled = parseEnabled(map.get(EMAIL_NOTIFY_USER_KEY), true);
+
+  return {
+    globalEnabled,
+    adminEnabled,
+    userEnabled
+  };
+}
+
+export async function saveEmailNotificationSettings(
+  env: Bindings,
+  settings: {
+    globalEnabled?: boolean;
+    adminEnabled?: boolean;
+    userEnabled?: boolean;
+  }
+) {
+  await env.CWD_DB.prepare(
+    'CREATE TABLE IF NOT EXISTS Settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)'
+  ).run();
+
+  const entries: { key: string; value: string | undefined }[] = [
+    {
+      key: EMAIL_NOTIFY_GLOBAL_KEY,
+      value:
+        typeof settings.globalEnabled === 'boolean'
+          ? settings.globalEnabled
+            ? '1'
+            : '0'
+          : undefined
+    },
+    {
+      key: EMAIL_NOTIFY_ADMIN_KEY,
+      value:
+        typeof settings.adminEnabled === 'boolean'
+          ? settings.adminEnabled
+            ? '1'
+            : '0'
+          : undefined
+    },
+    {
+      key: EMAIL_NOTIFY_USER_KEY,
+      value:
+        typeof settings.userEnabled === 'boolean'
+          ? settings.userEnabled
+            ? '1'
+            : '0'
+          : undefined
+    }
+  ];
+
+  for (const entry of entries) {
+    if (entry.value !== undefined) {
+      await env.CWD_DB.prepare('REPLACE INTO Settings (key, value) VALUES (?, ?)')
+        .bind(entry.key, entry.value)
+        .run();
+    }
+  }
+}
+
 export async function sendCommentReplyNotification(
   env: Bindings,
   params: {
@@ -24,9 +153,7 @@ export async function sendCommentReplyNotification(
   console.log('EmailReplyNotification:start', {
     toEmail,
     toName,
-    postTitle,
-    fromEmail: env.CF_FROM_EMAIL,
-    hasSendBinding: !!env.SEND_EMAIL
+    postTitle
   });
 
   const html = `
@@ -70,22 +197,13 @@ export async function sendCommentReplyNotification(
     </div>
   `;
 
-  if (!env.SEND_EMAIL || !env.CF_FROM_EMAIL) {
-    console.error('EmailReplyNotification:missingBinding', {
-      hasSendBinding: !!env.SEND_EMAIL,
-      fromEmail: env.CF_FROM_EMAIL
-    });
-    throw new Error('未配置邮件发送绑定或发件人地址');
-  }
-
   if (!isValidEmail(toEmail)) {
     console.warn('EmailReplyNotification:invalidRecipient', { toEmail });
     return;
   }
 
-  await env.SEND_EMAIL.send({
+  await dispatchMail(env, {
     to: [toEmail],
-    from: env.CF_FROM_EMAIL,
     subject: `评论回复 - ${postTitle}`,
     html
   });
@@ -109,13 +227,6 @@ export async function sendCommentNotification(
 ) {
   const { postTitle, postUrl, commentAuthor, commentContent } = params;
   const toEmail = await getAdminNotifyEmail(env);
-
-  console.log('EmailAdminNotification:start', {
-    toEmail,
-    postTitle,
-    fromEmail: env.CF_FROM_EMAIL,
-    hasSendBinding: !!env.SEND_EMAIL
-  });
 
   const html = `
     <div style="background-color:#f4f4f5;padding:24px 0;">
@@ -153,38 +264,16 @@ export async function sendCommentNotification(
     </div>
   `;
 
-  if (!env.SEND_EMAIL || !env.CF_FROM_EMAIL) {
-    console.error('EmailAdminNotification:missingBinding', {
-      hasSendBinding: !!env.SEND_EMAIL,
-      fromEmail: env.CF_FROM_EMAIL
-    });
-    throw new Error('未配置邮件发送绑定或发件人地址');
-  }
-
   if (!isValidEmail(toEmail)) {
     console.warn('EmailAdminNotification:invalidRecipient', { toEmail });
     return;
   }
 
-  console.log('EmailAdminNotification:send:start', {
-    to: toEmail,
-    from: env.CF_FROM_EMAIL
+  await dispatchMail(env, {
+    to: [toEmail],
+    subject: `新评论提醒 - ${postTitle}`,
+    html
   });
-  try {
-    await env.SEND_EMAIL.send({
-      to: [toEmail],
-      from: env.CF_FROM_EMAIL,
-      subject: `新评论提醒 - ${postTitle}`,
-      html
-    });
-  } catch (sendError: any) {
-    console.error('EmailAdminNotification:send:error', {
-      error: sendError.message,
-      to: toEmail,
-      from: env.CF_FROM_EMAIL
-    });
-    throw sendError;
-    }
 
   console.log('EmailAdminNotification:sent', {
     toEmail

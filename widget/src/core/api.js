@@ -9,7 +9,6 @@
  * @param {string} config.postSlug - 文章标识符
  * @param {string} config.postTitle - 文章标题（可选）
  * @param {string} config.postUrl - 文章 URL（可选）
- * @param {string} config.avatarPrefix - 头像服务前缀（可选）
  * @returns {Object}
  */
 export function createApiClient(config) {
@@ -28,11 +27,6 @@ export function createApiClient(config) {
       limit: limit.toString(),
       nested: 'true'
     });
-
-    // 如果配置了头像前缀，添加到请求参数
-    if (config.avatarPrefix) {
-      params.set('avatar_prefix', config.avatarPrefix);
-    }
 
     const response = await fetch(`${baseUrl}/api/comments?${params}`);
     if (!response.ok) {

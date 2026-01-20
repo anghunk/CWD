@@ -14,13 +14,12 @@
 
 ### 查询参数
 
-| 名称           | 位置   | 类型    | 必填 | 说明                                                                 |
-| -------------- | ------ | ------- | ---- | -------------------------------------------------------------------- |
-| `post_slug`    | query  | string  | 是   | 文章唯一标识符，与前端配置中的 `postSlug` 保持一致                  |
-| `page`         | query  | integer | 否   | 页码，默认 `1`                                                       |
-| `limit`        | query  | integer | 否   | 每页数量，默认 `20`，最大 `50`                                      |
-| `nested`       | query  | string  | 否   | 是否返回嵌套结构，默认 `'true'`                                     |
-| `avatar_prefix`| query  | string  | 否   | 覆盖头像地址前缀，优先级高于服务端设置和前端配置                    |
+| 名称            | 位置  | 类型    | 必填 | 说明                                                |
+| --------------- | ----- | ------- | ---- | --------------------------------------------------- |
+| `post_slug`     | query | string  | 是   | `window.location.origin + window.location.pathname` |
+| `page`          | query | integer | 否   | 页码，默认 `1`                                      |
+| `limit`         | query | integer | 否   | 每页数量，默认 `20`，最大 `50`                      |
+| `nested`        | query | string  | 否   | 是否返回嵌套结构，默认 `'true'`                     |
 
 ### 成功响应
 
