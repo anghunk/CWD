@@ -10,7 +10,7 @@ export default [
 	{
 		text: '功能',
 		items: [
-			{ text: '管理后台', link: '/function/admin-panel' },
+			{ text: '后台设置', link: '/function/admin-panel' },
 			{ text: '通知邮箱', link: '/function/email-reminder' },
 			{ text: '数据迁移', link: '/function/data-migration' },
 		],

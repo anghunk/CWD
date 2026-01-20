@@ -102,6 +102,7 @@ export function createCommentStore(config, fetchComments, submitComment) {
 		comments: [],
 		loading: true,
 		error: null,
+		successMessage: '',
 
 		// 分页
 		pagination: {
@@ -186,6 +187,7 @@ export function createCommentStore(config, fetchComments, submitComment) {
 			formErrors: {},
 			submitting: true,
 			error: null,
+			successMessage: '',
 		});
 
 		try {
@@ -197,10 +199,14 @@ export function createCommentStore(config, fetchComments, submitComment) {
 				adminToken: auth.getToken() // Add token if exists
 			});
 
-			// 清空评论内容
+			const successMessage = config.requireReview
+				? '已提交评论，待管理员审核后显示'
+				: '评论已提交';
+
 			store.setState({
 				form: { ...form, content: '' },
 				submitting: false,
+				successMessage,
 			});
 
 			// 重新加载评论
@@ -210,6 +216,7 @@ export function createCommentStore(config, fetchComments, submitComment) {
 			store.setState({
 				error: e instanceof Error ? e.message : '提交评论失败',
 				submitting: false,
+				successMessage: '',
 			});
 			return false;
 		}
@@ -335,6 +342,12 @@ export function createCommentStore(config, fetchComments, submitComment) {
 		});
 	}
 
+	function clearSuccess() {
+		store.setState({
+			successMessage: '',
+		});
+	}
+
 	/**
 	 * 切换页码
 	 * @param {number} page - 页码
@@ -366,6 +379,7 @@ export function createCommentStore(config, fetchComments, submitComment) {
 		updateReplyContent,
 		clearReplyError,
 		clearError,
+		clearSuccess,
 		goToPage,
 	};
 }

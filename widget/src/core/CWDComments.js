@@ -157,6 +157,9 @@ export class CWDComments {
 			if (serverConfig.adminEnabled && serverConfig.adminBadge) {
 				this.config.adminBadge = serverConfig.adminBadge;
 			}
+			if (typeof serverConfig.requireReview === 'boolean') {
+				this.config.requireReview = serverConfig.requireReview;
+			}
 
 			const api = createApiClient(this.config);
 			this.api = api;
@@ -256,6 +259,29 @@ export class CWDComments {
 			existingError.remove();
 		}
 
+		const existingSuccess = this.mountPoint.querySelector('.cwd-success-inline');
+		if (state.successMessage) {
+			if (!existingSuccess) {
+				const successEl = document.createElement('div');
+				successEl.className = 'cwd-success-inline';
+				successEl.innerHTML = `
+          <span>${state.successMessage}</span>
+          <button type="button" class="cwd-error-close" data-action="clear-success">✕</button>
+        `;
+				successEl.querySelector('[data-action="clear-success"]').addEventListener('click', () => {
+					this.store.clearSuccess();
+				});
+				this.mountPoint.insertBefore(successEl, this.mountPoint.firstChild);
+			} else {
+				const span = existingSuccess.querySelector('span');
+				if (span) {
+					span.textContent = state.successMessage;
+				}
+			}
+		} else if (existingSuccess) {
+			existingSuccess.remove();
+		}
+
 		// 创建头部统计
 		let header = this.mountPoint.querySelector('.cwd-comments-header');
 		if (!header) {
@@ -350,6 +376,29 @@ export class CWDComments {
 			}
 		} else if (existingError) {
 			existingError.remove();
+		}
+
+		const existingSuccess = this.mountPoint?.querySelector('.cwd-success-inline');
+		if (state.successMessage) {
+			if (!existingSuccess) {
+				const successEl = document.createElement('div');
+				successEl.className = 'cwd-success-inline';
+				successEl.innerHTML = `
+          <span>${state.successMessage}</span>
+          <button type="button" class="cwd-error-close" data-action="clear-success">✕</button>
+        `;
+				successEl.querySelector('[data-action="clear-success"]').addEventListener('click', () => {
+					this.store.clearSuccess();
+				});
+				this.mountPoint?.insertBefore(successEl, this.mountPoint.firstChild);
+			} else {
+				const span = existingSuccess.querySelector('span');
+				if (span) {
+					span.textContent = state.successMessage;
+				}
+			}
+		} else if (existingSuccess) {
+			existingSuccess.remove();
 		}
 
 		// 更新头部统计

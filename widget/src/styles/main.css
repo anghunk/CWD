@@ -298,7 +298,6 @@
   width: 40px;
   height: 40px;
   border-radius: 5px;
-  border: 1px solid var(--cwd-border, #d0d7de);
   overflow: hidden;
   background: var(--cwd-bg-avatar, #f6f8fa)
 }
@@ -658,6 +657,19 @@
 
 .cwd-error-close:hover {
   background: rgba(0, 0, 0, 0.1);
+}
+
+.cwd-success-inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: #1a7f37;
+  background: #dafbe1;
+  border: 1px solid #54ae65;
+  border-radius: var(--cwd-radius, 6px);
 }
 
 /* ========== 其他 ========== */

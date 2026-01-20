@@ -238,7 +238,8 @@
   "adminBadge": "博主",
   "avatarPrefix": "https://gravatar.com/avatar",
   "adminEnabled": true,
-  "allowedDomains": []
+  "allowedDomains": [],
+  "requireReview": false
 }
 ```
 
@@ -251,6 +252,7 @@
 | `avatarPrefix` | string  | 头像地址前缀，如 Gravatar 或 Cravatar 镜像地址                      |
 | `adminEnabled` | boolean | 是否启用博主标识相关展示（关闭时不显示徽标，但仍可作为管理员邮箱） |
 | `allowedDomains` | Array\<string\> | 允许调用组件的域名列表，留空则不限制                         |
+| `requireReview` | boolean | 是否开启新评论先审核再显示（true 表示新评论默认为待审核）          |
 
 ### 错误响应
 

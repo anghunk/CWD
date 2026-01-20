@@ -40,15 +40,24 @@ export const postComment = async (c: Context<{ Bindings: Bindings }>) => {
     return c.json({ message: '邮箱格式不正确' }, 400);
   }
   const ua = c.req.header('user-agent') || "";
-  
-  // 1. 获取 IP (Worker 获取 IP 的标准方式)
+
   const ip = c.req.header('cf-connecting-ip') || "127.0.0.1";
 
-  // 1.5 管理员身份验证
-  const adminEmail = await c.env.CWD_DB.prepare('SELECT value FROM Settings WHERE key = ?').bind('comment_admin_email').first<string>('value');
-  
+  const adminEmail = await c.env.CWD_DB.prepare('SELECT value FROM Settings WHERE key = ?')
+    .bind('comment_admin_email')
+    .first<string>('value');
+
+  const requireReviewRaw = await c.env.CWD_DB.prepare('SELECT value FROM Settings WHERE key = ?')
+    .bind('comment_require_review')
+    .first<string>('value');
+  const requireReview = requireReviewRaw === '1';
+
+  let isAdminComment = false;
+
   if (adminEmail && email === adminEmail) {
-    const adminKey = await c.env.CWD_DB.prepare('SELECT value FROM Settings WHERE key = ?').bind('comment_admin_key_hash').first<string>('value');
+    const adminKey = await c.env.CWD_DB.prepare('SELECT value FROM Settings WHERE key = ?')
+      .bind('comment_admin_key_hash')
+      .first<string>('value');
 
     if (adminKey) {
       const lockKey = `admin_lock:${ip}`;
@@ -76,12 +85,11 @@ export const postComment = async (c: Context<{ Bindings: Bindings }>) => {
           return c.json({ message: "密钥错误" }, 401);
         }
       }
-      
-      // 验证成功，清除失败记录
+
       await c.env.CWD_AUTH_KV.delete(`admin_fail:${ip}`);
+      isAdminComment = true;
     }
   }
-
   // 2. 检查评论频率控制 (对应 canPostComment)
   // 这里建议使用 D1 查最近一条评论的时间，或者直接放行（如果使用了 Cloudflare WAF）
   const lastComment = await c.env.CWD_DB.prepare(
@@ -123,7 +131,8 @@ export const postComment = async (c: Context<{ Bindings: Bindings }>) => {
   const uaParser = new UAParser(ua);
   const uaResult = uaParser.getResult();
 
-  // 4. 写入 D1 数据库
+  const defaultStatus = requireReview && !isAdminComment ? "pending" : "approved";
+
   try {
     const { success } = await c.env.CWD_DB.prepare(`
       INSERT INTO Comment (
@@ -145,7 +154,7 @@ export const postComment = async (c: Context<{ Bindings: Bindings }>) => {
       contentText,
       contentHtml,
       parentId || null,
-      "approved" // 或者从环境变量读取默认状态
+      defaultStatus
     ).run();
 
     if (!success) throw new Error("Database insert failed");

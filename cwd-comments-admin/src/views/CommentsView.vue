@@ -369,14 +369,14 @@ onMounted(() => {
 
 .table-row {
   display: flex;
-  border-bottom: 1px solid #eaeae0;
+  /* border-bottom: 1px solid #eaeae0; */
 }
 
 .table-row:last-child {
   border-bottom: none;
 }
 
-.table-row:hover {
+.table-row:hover .table-cell{
   background-color: #f8f9fa;
 }
 
@@ -387,6 +387,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   box-sizing: border-box;
+  border-bottom: 1px solid #eaeae0;
 }
 
 .table-cell-id {
@@ -499,7 +500,7 @@ onMounted(() => {
 .cell-avatar {
   width: 32px;
   height: 32px;
-  border-radius: 50%;
+  border-radius: 5px;
   flex-shrink: 0;
 }
 
@@ -568,17 +569,22 @@ onMounted(() => {
 .pagination {
   margin-top: 30px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+  white-space: nowrap;
 }
 
 .pagination-button {
+  height: 28px;
+  min-width: 28px;
   padding: 4px 8px;
   border-radius: 4px;
   border: 1px solid #d0d7de;
   background-color: #f6f8fa;
   font-size: 12px;
   cursor: pointer;
+  box-sizing: border-box;
 }
 
 .pagination-button:disabled {
@@ -608,7 +614,7 @@ onMounted(() => {
 
 .pagination-input {
   width: 60px;
-  height: 24px;
+  height: 28px;
   box-sizing: border-box;
   padding: 2px 4px;
   border-radius: 4px;

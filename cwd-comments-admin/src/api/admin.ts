@@ -42,6 +42,7 @@ export type CommentSettingsResponse = {
 	allowedDomains?: string[];
 	adminKey?: string | null;
 	adminKeySet?: boolean;
+	requireReview?: boolean;
 };
 
 export type EmailNotifySettingsResponse = {
@@ -135,6 +136,7 @@ export function saveCommentSettings(data: {
 	adminEnabled?: boolean;
 	allowedDomains?: string[];
 	adminKey?: string;
+	requireReview?: boolean;
 }): Promise<{ message: string }> {
 	return put<{ message: string }>('/admin/settings/comments', data);
 }

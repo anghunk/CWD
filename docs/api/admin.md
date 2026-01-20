@@ -450,7 +450,8 @@ Token 通过登录接口获取，有效期为 24 小时。
 	"adminEnabled": true,
 	"allowedDomains": [],
 	"adminKey": "your-admin-key",
-	"adminKeySet": true
+	"adminKeySet": true,
+  "requireReview": false
 }
 ```
 
@@ -465,6 +466,7 @@ Token 通过登录接口获取，有效期为 24 小时。
 | `allowedDomains` | Array\<string\> | 允许调用组件的域名列表，留空则不限制           |
 | `adminKey`     | string\|null | 管理员评论密钥（明文），仅通过管理后台接口返回 |
 | `adminKeySet`  | boolean | 是否已经设置过管理员评论密钥                            |
+| `requireReview` | boolean | 是否开启新评论先审核再显示（true 表示新评论默认为待审核） |
 
 ### 错误响应
 
@@ -499,7 +501,8 @@ Token 通过登录接口获取，有效期为 24 小时。
 	"avatarPrefix": "https://cravatar.cn/avatar",
 	"adminEnabled": true,
 	"allowedDomains": [],
-	"adminKey": "your-admin-key"
+	"adminKey": "your-admin-key",
+  "requireReview": false
 }
 ```
 
@@ -513,6 +516,7 @@ Token 通过登录接口获取，有效期为 24 小时。
 | `adminEnabled`   | boolean | 否   | 是否启用博主标识相关展示                                             |
 | `allowedDomains` | Array   | 否   | 允许前端调用组件的域名列表                                           |
 | `adminKey`       | string  | 否   | 管理员评论密钥，留空则表示清除密钥；设置后前台管理员评论需输入密钥 |
+| `requireReview`  | boolean | 否   | 是否开启新评论先审核再显示（不传则保持不变）                         |
 
 ### 成功响应
 

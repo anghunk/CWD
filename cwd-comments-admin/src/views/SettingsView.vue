@@ -28,6 +28,13 @@
           </label>
         </div>
         <div class="form-item">
+          <label class="form-label">新评论是否审核后再显示</label>
+          <label class="switch">
+            <input v-model="requireReview" type="checkbox" />
+            <span class="slider" />
+          </label>
+        </div>
+        <div class="form-item">
           <label class="form-label">头像前缀（默认：https://gravatar.com/avatar）</label>
           <input v-model="avatarPrefix" class="form-input" type="text" />
         </div>
@@ -300,6 +307,7 @@ const commentAdminEnabled = ref(false);
 const allowedDomains = ref("");
 const commentAdminKey = ref("");
 const adminKeySet = ref(false);
+const requireReview = ref(false);
 const savingEmail = ref(false);
 const testingEmail = ref(false);
 const savingComment = ref(false);
@@ -359,6 +367,7 @@ async function load() {
       : "";
     commentAdminKey.value = commentRes.adminKey || "";
     adminKeySet.value = !!commentRes.adminKeySet;
+    requireReview.value = !!commentRes.requireReview;
     emailGlobalEnabled.value = !!emailNotifyRes.globalEnabled;
 
     if (emailNotifyRes.templates) {
@@ -488,6 +497,7 @@ async function saveComment() {
         .map((d) => d.trim())
         .filter(Boolean),
       adminKey: commentAdminKey.value || undefined,
+      requireReview: requireReview.value,
     });
 
     showToast(res.message || "保存成功", "success");
