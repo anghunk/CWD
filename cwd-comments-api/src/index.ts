@@ -19,12 +19,18 @@ const VERSION = 'v0.0.1';
 const COMMENT_ADMIN_EMAIL_KEY = 'comment_admin_email';
 const COMMENT_ADMIN_BADGE_KEY = 'comment_admin_badge';
 const COMMENT_AVATAR_PREFIX_KEY = 'comment_avatar_prefix';
+const COMMENT_ADMIN_ENABLED_KEY = 'comment_admin_enabled';
 
 async function loadCommentSettings(env: Bindings) {
 	await env.CWD_DB.prepare(
 		'CREATE TABLE IF NOT EXISTS Settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)'
 	).run();
-	const keys = [COMMENT_ADMIN_EMAIL_KEY, COMMENT_ADMIN_BADGE_KEY, COMMENT_AVATAR_PREFIX_KEY];
+	const keys = [
+		COMMENT_ADMIN_EMAIL_KEY,
+		COMMENT_ADMIN_BADGE_KEY,
+		COMMENT_AVATAR_PREFIX_KEY,
+		COMMENT_ADMIN_ENABLED_KEY
+	];
 	const { results } = await env.CWD_DB.prepare(
 		'SELECT key, value FROM Settings WHERE key IN (?, ?, ?)'
 	)
@@ -38,16 +44,25 @@ async function loadCommentSettings(env: Bindings) {
 		}
 	}
 
+	const enabledRaw = map.get(COMMENT_ADMIN_ENABLED_KEY) ?? null;
+	const adminEnabled = enabledRaw === '1';
+
 	return {
 		adminEmail: map.get(COMMENT_ADMIN_EMAIL_KEY) ?? null,
 		adminBadge: map.get(COMMENT_ADMIN_BADGE_KEY) ?? null,
-		avatarPrefix: map.get(COMMENT_AVATAR_PREFIX_KEY) ?? null
+		avatarPrefix: map.get(COMMENT_AVATAR_PREFIX_KEY) ?? null,
+		adminEnabled
 	};
 }
 
 async function saveCommentSettings(
 	env: Bindings,
-	settings: { adminEmail?: string; adminBadge?: string; avatarPrefix?: string }
+	settings: {
+		adminEmail?: string;
+		adminBadge?: string;
+		avatarPrefix?: string;
+		adminEnabled?: boolean;
+	}
 ) {
 	await env.CWD_DB.prepare(
 		'CREATE TABLE IF NOT EXISTS Settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)'
@@ -56,7 +71,16 @@ async function saveCommentSettings(
 	const entries: { key: string; value: string | null | undefined }[] = [
 		{ key: COMMENT_ADMIN_EMAIL_KEY, value: settings.adminEmail },
 		{ key: COMMENT_ADMIN_BADGE_KEY, value: settings.adminBadge },
-		{ key: COMMENT_AVATAR_PREFIX_KEY, value: settings.avatarPrefix }
+		{ key: COMMENT_AVATAR_PREFIX_KEY, value: settings.avatarPrefix },
+		{
+			key: COMMENT_ADMIN_ENABLED_KEY,
+			value:
+				typeof settings.adminEnabled === 'boolean'
+					? settings.adminEnabled
+						? '1'
+						: '0'
+					: undefined
+		}
 	];
 
 	for (const entry of entries) {
@@ -138,10 +162,15 @@ app.put('/admin/settings/comments', async (c) => {
 		const rawAdminEmail = typeof body.adminEmail === 'string' ? body.adminEmail : '';
 		const rawAdminBadge = typeof body.adminBadge === 'string' ? body.adminBadge : '';
 		const rawAvatarPrefix = typeof body.avatarPrefix === 'string' ? body.avatarPrefix : '';
+		const rawAdminEnabled = body.adminEnabled;
 
 		const adminEmail = rawAdminEmail.trim();
 		const adminBadge = rawAdminBadge.trim();
 		const avatarPrefix = rawAvatarPrefix.trim();
+		const adminEnabled =
+			typeof rawAdminEnabled === 'boolean'
+				? rawAdminEnabled
+				: rawAdminEnabled === '1' || rawAdminEnabled === 1;
 
 		if (adminEmail && !isValidEmail(adminEmail)) {
 			return c.json({ message: '邮箱格式不正确' }, 400);
@@ -150,7 +179,8 @@ app.put('/admin/settings/comments', async (c) => {
 		await saveCommentSettings(c.env, {
 			adminEmail,
 			adminBadge,
-			avatarPrefix
+			avatarPrefix,
+			adminEnabled
 		});
 
 		return c.json({ message: '保存成功' });

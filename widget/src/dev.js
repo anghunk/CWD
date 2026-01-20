@@ -79,6 +79,7 @@ async function loadServerCommentConfig(apiBaseUrl) {
 		return {
 			adminEmail: data.adminEmail || '',
 			adminBadge: data.adminBadge || '',
+			adminEnabled: !!data.adminEnabled,
 			avatarPrefix: data.avatarPrefix || '',
 		};
 	} catch (e) {
@@ -119,8 +120,12 @@ async function initWidget() {
 			theme: config.theme,
 			avatarPrefix: serverConfig.avatarPrefix || config.avatarPrefix,
 			pageSize: 20,
-			...(serverConfig.adminEmail ? { adminEmail: serverConfig.adminEmail } : {}),
-			...(serverConfig.adminBadge ? { adminBadge: serverConfig.adminBadge } : {}),
+			...(serverConfig.adminEnabled && serverConfig.adminEmail
+				? { adminEmail: serverConfig.adminEmail }
+				: {}),
+			...(serverConfig.adminEnabled && serverConfig.adminBadge
+				? { adminBadge: serverConfig.adminBadge }
+				: {}),
 		});
 		widgetInstance.mount();
 		console.log('[CWDComments] Widget 初始化成功', config);

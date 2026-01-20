@@ -37,6 +37,7 @@ export type CommentSettingsResponse = {
 	adminEmail: string | null;
 	adminBadge: string | null;
 	avatarPrefix: string | null;
+	adminEnabled: boolean;
 };
 
 export async function loginAdmin(name: string, password: string): Promise<string> {
@@ -78,6 +79,7 @@ export function saveCommentSettings(data: {
 	adminEmail?: string;
 	adminBadge?: string;
 	avatarPrefix?: string;
+	adminEnabled?: boolean;
 }): Promise<{ message: string }> {
 	return put<{ message: string }>('/admin/settings/comments', data);
 }

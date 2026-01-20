@@ -37,6 +37,13 @@
           <input v-model="commentAdminBadge" class="form-input" type="text" />
         </div>
         <div class="form-item">
+          <label class="form-label">是否开启博主显示</label>
+          <label class="switch">
+            <input v-model="commentAdminEnabled" type="checkbox" />
+            <span class="slider" />
+          </label>
+        </div>
+        <div class="form-item">
           <label class="form-label">头像前缀（Gravatar/Cravatar）</label>
           <input v-model="avatarPrefix" class="form-input" type="text" />
         </div>
@@ -64,6 +71,7 @@ const email = ref("");
 const commentAdminEmail = ref("");
 const commentAdminBadge = ref("");
 const avatarPrefix = ref("");
+const commentAdminEnabled = ref(false);
 const savingEmail = ref(false);
 const savingComment = ref(false);
 const loading = ref(false);
@@ -81,6 +89,7 @@ async function load() {
     commentAdminEmail.value = commentRes.adminEmail || "";
     commentAdminBadge.value = commentRes.adminBadge || "博主";
     avatarPrefix.value = commentRes.avatarPrefix || "";
+    commentAdminEnabled.value = !!commentRes.adminEnabled;
   } catch (e: any) {
     message.value = e.message || "加载失败";
     messageType.value = "error";
@@ -117,6 +126,7 @@ async function saveComment() {
       adminEmail: commentAdminEmail.value,
       adminBadge: commentAdminBadge.value,
       avatarPrefix: avatarPrefix.value,
+      adminEnabled: commentAdminEnabled.value,
     });
     message.value = res.message || "保存成功";
     messageType.value = "success";
@@ -182,6 +192,53 @@ onMounted(() => {
 .form-input:focus {
   border-color: #0969da;
   box-shadow: 0 0 0 1px rgba(9, 105, 218, 0.2);
+}
+
+.switch {
+  position: relative;
+  display: inline-flex;
+  width: 40px;
+  height: 22px;
+  align-items: center;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #d0d7de;
+  transition: 0.2s;
+  border-radius: 999px;
+}
+
+.slider::before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  top: 3px;
+  background-color: #ffffff;
+  transition: 0.2s;
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(27, 31, 36, 0.15);
+}
+
+.switch input:checked + .slider {
+  background-color: #0969da;
+}
+
+.switch input:checked + .slider::before {
+  transform: translateX(16px);
 }
 
 .card-actions {
