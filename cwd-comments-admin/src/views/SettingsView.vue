@@ -19,8 +19,30 @@
           {{ message }}
         </div>
         <div class="card-actions">
-          <button class="card-button" :disabled="saving" @click="save">
-            <span v-if="saving">保存中...</span>
+          <button class="card-button" :disabled="savingEmail" @click="saveEmail">
+            <span v-if="savingEmail">保存中...</span>
+            <span v-else>保存</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title">评论显示配置</h3>
+        <div class="form-item">
+          <label class="form-label">评论博主邮箱（用于前台标记）</label>
+          <input v-model="commentAdminEmail" class="form-input" type="email" />
+        </div>
+        <div class="form-item">
+          <label class="form-label">博主标签文字</label>
+          <input v-model="commentAdminBadge" class="form-input" type="text" />
+        </div>
+        <div class="form-item">
+          <label class="form-label">头像前缀（Gravatar/Cravatar）</label>
+          <input v-model="avatarPrefix" class="form-input" type="text" />
+        </div>
+        <div class="card-actions">
+          <button class="card-button" :disabled="savingComment" @click="saveComment">
+            <span v-if="savingComment">保存中...</span>
             <span v-else>保存</span>
           </button>
         </div>
@@ -31,10 +53,19 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { fetchAdminEmail, saveAdminEmail } from "../api/admin";
+import {
+  fetchAdminEmail,
+  saveAdminEmail,
+  fetchCommentSettings,
+  saveCommentSettings,
+} from "../api/admin";
 
 const email = ref("");
-const saving = ref(false);
+const commentAdminEmail = ref("");
+const commentAdminBadge = ref("");
+const avatarPrefix = ref("");
+const savingEmail = ref(false);
+const savingComment = ref(false);
 const loading = ref(false);
 const message = ref("");
 const messageType = ref<"success" | "error">("success");
@@ -42,8 +73,14 @@ const messageType = ref<"success" | "error">("success");
 async function load() {
   loading.value = true;
   try {
-    const res = await fetchAdminEmail();
-    email.value = res.email || "";
+    const [notifyRes, commentRes] = await Promise.all([
+      fetchAdminEmail(),
+      fetchCommentSettings(),
+    ]);
+    email.value = notifyRes.email || "";
+    commentAdminEmail.value = commentRes.adminEmail || "";
+    commentAdminBadge.value = commentRes.adminBadge || "博主";
+    avatarPrefix.value = commentRes.avatarPrefix || "";
   } catch (e: any) {
     message.value = e.message || "加载失败";
     messageType.value = "error";
@@ -52,13 +89,13 @@ async function load() {
   }
 }
 
-async function save() {
+async function saveEmail() {
   if (!email.value) {
     message.value = "请输入邮箱";
     messageType.value = "error";
     return;
   }
-  saving.value = true;
+  savingEmail.value = true;
   message.value = "";
   try {
     const res = await saveAdminEmail(email.value);
@@ -68,7 +105,26 @@ async function save() {
     message.value = e.message || "保存失败";
     messageType.value = "error";
   } finally {
-    saving.value = false;
+    savingEmail.value = false;
+  }
+}
+
+async function saveComment() {
+  savingComment.value = true;
+  message.value = "";
+  try {
+    const res = await saveCommentSettings({
+      adminEmail: commentAdminEmail.value,
+      adminBadge: commentAdminBadge.value,
+      avatarPrefix: avatarPrefix.value,
+    });
+    message.value = res.message || "保存成功";
+    messageType.value = "success";
+  } catch (e: any) {
+    message.value = e.message || "保存失败";
+    messageType.value = "error";
+  } finally {
+    savingComment.value = false;
   }
 }
 

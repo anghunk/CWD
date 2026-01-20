@@ -11,6 +11,7 @@ export type CommentItem = {
 	pubDate: string;
 	author: string;
 	email: string;
+	avatar: string;
 	postSlug: string;
 	url: string | null;
 	ipAddress: string | null;
@@ -30,6 +31,12 @@ export type CommentListResponse = {
 
 export type AdminEmailResponse = {
 	email: string | null;
+};
+
+export type CommentSettingsResponse = {
+	adminEmail: string | null;
+	adminBadge: string | null;
+	avatarPrefix: string | null;
 };
 
 export async function loginAdmin(name: string, password: string): Promise<string> {
@@ -63,3 +70,14 @@ export function saveAdminEmail(email: string): Promise<{ message: string }> {
 	return put<{ message: string }>('/admin/settings/email', { email });
 }
 
+export function fetchCommentSettings(): Promise<CommentSettingsResponse> {
+	return get<CommentSettingsResponse>('/admin/settings/comments');
+}
+
+export function saveCommentSettings(data: {
+	adminEmail?: string;
+	adminBadge?: string;
+	avatarPrefix?: string;
+}): Promise<{ message: string }> {
+	return put<{ message: string }>('/admin/settings/comments', data);
+}

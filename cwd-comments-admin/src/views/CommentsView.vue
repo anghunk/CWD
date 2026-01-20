@@ -27,9 +27,19 @@
         </div>
         <div v-for="item in filteredComments" :key="item.id" class="table-row">
           <div class="table-cell table-cell-author">
-            <div class="cell-author-name">{{ item.author }}</div>
-            <div class="cell-author-email">{{ item.email }}</div>
-            <span class="cell-time">{{ formatDate(item.pubDate) }}</span>
+            <div class="cell-author-wrapper">
+              <img
+                v-if="item.avatar"
+                :src="item.avatar"
+                class="cell-avatar"
+                :alt="item.author"
+              />
+              <div class="cell-author-main">
+                <div class="cell-author-name">{{ item.author }}</div>
+                <div class="cell-author-email">{{ item.email }}</div>
+                <span class="cell-time">{{ formatDate(item.pubDate) }}</span>
+              </div>
+            </div>
           </div>
           <div class="table-cell table-cell-content">
             <div class="cell-content-text">{{ item.contentText }}</div>
@@ -291,8 +301,6 @@ onMounted(() => {
 
 .table-cell-author {
   width: 180px;
-  flex-direction: column;
-  align-items: flex-start !important;
   flex-shrink: 0;
 }
 
@@ -367,6 +375,24 @@ onMounted(() => {
 .cell-time {
   font-size: 12px;
   color: #57606a;
+}
+
+.cell-author-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.cell-author-main {
+  display: flex;
+  flex-direction: column;
+}
+
+.cell-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .cell-status {

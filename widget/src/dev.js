@@ -9,10 +9,10 @@ const STORAGE_KEY = 'cwd-dev-config';
 
 // 默认配置
 const DEFAULT_CONFIG = {
+	el: '#comments',
 	apiBaseUrl: 'http://localhost:8788',
-	postSlug: "https://zishu.me/message",
+	postSlug: window.location.pathname,
 	theme: 'light',
-	avatarPrefix: 'https://gravatar.com/avatar',
 };
 
 let widgetInstance = null;
@@ -69,10 +69,28 @@ function getConfigFromInputs() {
 	return { apiBaseUrl, postSlug, theme, avatarPrefix };
 }
 
+async function loadServerCommentConfig(apiBaseUrl) {
+	try {
+		const res = await fetch(`${apiBaseUrl}/api/config/comments`);
+		if (!res.ok) {
+			return {};
+		}
+		const data = await res.json();
+		return {
+			adminEmail: data.adminEmail || '',
+			adminBadge: data.adminBadge || '',
+			avatarPrefix: data.avatarPrefix || '',
+		};
+	} catch (e) {
+		console.warn('[CWDComments] 加载服务端评论配置失败:', e);
+		return {};
+	}
+}
+
 /**
  * 初始化 widget
  */
-function initWidget() {
+async function initWidget() {
 	const config = getConfigFromInputs();
 
 	// 保存到本地存储
@@ -92,15 +110,17 @@ function initWidget() {
 
 	// 创建新实例
 	try {
+		const serverConfig = await loadServerCommentConfig(config.apiBaseUrl);
+
 		widgetInstance = new CWDComments({
 			el: '#comments',
 			apiBaseUrl: config.apiBaseUrl,
 			postSlug: config.postSlug,
 			theme: config.theme,
-			avatarPrefix: config.avatarPrefix,
+			avatarPrefix: serverConfig.avatarPrefix || config.avatarPrefix,
 			pageSize: 20,
-			adminEmail: 'anghunk@gmail.com', // 博主邮箱，留空不进行匹配
-			adminBadge: '博主', // 自定义标识，默认为"博主"
+			...(serverConfig.adminEmail ? { adminEmail: serverConfig.adminEmail } : {}),
+			...(serverConfig.adminBadge ? { adminBadge: serverConfig.adminBadge } : {}),
 		});
 		widgetInstance.mount();
 		console.log('[CWDComments] Widget 初始化成功', config);

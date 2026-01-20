@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
-import { cors } from 'hono/cors';
 import { Bindings } from './bindings';
 import { customCors } from './utils/cors';
 import { adminAuth } from './utils/auth';
+import { isValidEmail } from './utils/email';
 
 import { getComments } from './api/public/getComments';
 import { postComment } from './api/public/postComment';
@@ -15,6 +15,64 @@ import { setAdminEmail } from './api/admin/setAdminEmail';
 
 const app = new Hono<{ Bindings: Bindings }>();
 const VERSION = 'v0.0.1';
+
+const COMMENT_ADMIN_EMAIL_KEY = 'comment_admin_email';
+const COMMENT_ADMIN_BADGE_KEY = 'comment_admin_badge';
+const COMMENT_AVATAR_PREFIX_KEY = 'comment_avatar_prefix';
+
+async function loadCommentSettings(env: Bindings) {
+	await env.CWD_DB.prepare(
+		'CREATE TABLE IF NOT EXISTS Settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)'
+	).run();
+	const keys = [COMMENT_ADMIN_EMAIL_KEY, COMMENT_ADMIN_BADGE_KEY, COMMENT_AVATAR_PREFIX_KEY];
+	const { results } = await env.CWD_DB.prepare(
+		'SELECT key, value FROM Settings WHERE key IN (?, ?, ?)'
+	)
+		.bind(...keys)
+		.all<{ key: string; value: string }>();
+
+	const map = new Map<string, string>();
+	for (const row of results) {
+		if (row && row.key) {
+			map.set(row.key, row.value);
+		}
+	}
+
+	return {
+		adminEmail: map.get(COMMENT_ADMIN_EMAIL_KEY) ?? null,
+		adminBadge: map.get(COMMENT_ADMIN_BADGE_KEY) ?? null,
+		avatarPrefix: map.get(COMMENT_AVATAR_PREFIX_KEY) ?? null
+	};
+}
+
+async function saveCommentSettings(
+	env: Bindings,
+	settings: { adminEmail?: string; adminBadge?: string; avatarPrefix?: string }
+) {
+	await env.CWD_DB.prepare(
+		'CREATE TABLE IF NOT EXISTS Settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)'
+	).run();
+
+	const entries: { key: string; value: string | null | undefined }[] = [
+		{ key: COMMENT_ADMIN_EMAIL_KEY, value: settings.adminEmail },
+		{ key: COMMENT_ADMIN_BADGE_KEY, value: settings.adminBadge },
+		{ key: COMMENT_AVATAR_PREFIX_KEY, value: settings.avatarPrefix }
+	];
+
+	for (const entry of entries) {
+		if (entry.value !== undefined) {
+			const value = entry.value === null ? '' : entry.value;
+			const trimmed = typeof value === 'string' ? value.trim() : value;
+			if (trimmed) {
+				await env.CWD_DB.prepare('REPLACE INTO Settings (key, value) VALUES (?, ?)')
+					.bind(entry.key, trimmed)
+					.run();
+			} else {
+				await env.CWD_DB.prepare('DELETE FROM Settings WHERE key = ?').bind(entry.key).run();
+			}
+		}
+	}
+}
 
 app.use('*', async (c, next) => {
 	console.log('Request:start', {
@@ -49,6 +107,14 @@ app.get('/', (c) => {
 
 app.get('/api/comments', getComments);
 app.post('/api/comments', postComment);
+app.get('/api/config/comments', async (c) => {
+	try {
+		const settings = await loadCommentSettings(c.env);
+		return c.json(settings);
+	} catch (e: any) {
+		return c.json({ message: e.message || '加载评论配置失败' }, 500);
+	}
+});
 
 app.post('/admin/login', adminLogin);
 app.use('/admin/*', adminAuth);
@@ -58,5 +124,39 @@ app.put('/admin/comments/status', updateStatus);
 // 设置接口
 app.get('/admin/settings/email', getAdminEmail);
 app.put('/admin/settings/email', setAdminEmail);
+app.get('/admin/settings/comments', async (c) => {
+	try {
+		const settings = await loadCommentSettings(c.env);
+		return c.json(settings);
+	} catch (e: any) {
+		return c.json({ message: e.message || '加载评论配置失败' }, 500);
+	}
+});
+app.put('/admin/settings/comments', async (c) => {
+	try {
+		const body = await c.req.json();
+		const rawAdminEmail = typeof body.adminEmail === 'string' ? body.adminEmail : '';
+		const rawAdminBadge = typeof body.adminBadge === 'string' ? body.adminBadge : '';
+		const rawAvatarPrefix = typeof body.avatarPrefix === 'string' ? body.avatarPrefix : '';
+
+		const adminEmail = rawAdminEmail.trim();
+		const adminBadge = rawAdminBadge.trim();
+		const avatarPrefix = rawAvatarPrefix.trim();
+
+		if (adminEmail && !isValidEmail(adminEmail)) {
+			return c.json({ message: '邮箱格式不正确' }, 400);
+		}
+
+		await saveCommentSettings(c.env, {
+			adminEmail,
+			adminBadge,
+			avatarPrefix
+		});
+
+		return c.json({ message: '保存成功' });
+	} catch (e: any) {
+		return c.json({ message: e.message || '保存失败' }, 500);
+	}
+});
 
 export default app;
