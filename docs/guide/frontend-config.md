@@ -44,3 +44,35 @@
 // 动态切换主题
 comments.updateConfig({ theme: 'dark' });
 ```
+
+### 博客程序使用示例
+
+### HTML
+
+```html
+<div id="comments"></div>
+<script src="https://cwd-comments.zishu.me/cwd-comments.js"></script>
+<script>
+	const comments = new CWDComments({
+		el: '#comments',
+		apiBaseUrl: 'https://your-api.example.com', // 你部署的后端接口地址
+	});
+	comments.mount();
+</script>
+```
+
+### Astro
+
+```astro
+<div id="comments"></div>
+<script src="https://cwd-comments.zishu.me/cwd-comments.js" is:inline></script>
+<script is:inline>
+  document.addEventListener('DOMContentLoaded', () => {
+    const comments = new window.CWDComments({
+      el: '#comments',
+      apiBaseUrl: 'https://your-api.example.com',
+    });
+    comments.mount();
+  });
+</script>
+```

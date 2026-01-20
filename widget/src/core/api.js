@@ -64,17 +64,42 @@
 				url: data.url || undefined,
 				content: data.content,
 				parent_id: data.parentId,
+				adminToken: data.adminToken
 			}),
 		});
 
 		if (!response.ok) {
-			throw new Error(`提交评论失败: ${response.status} ${response.statusText}`);
+            // Try to parse error message
+            let msg = response.statusText;
+            try {
+                const json = await response.json();
+                if (json.message) msg = json.message;
+            } catch (e) {}
+			throw new Error(msg);
 		}
 		return response.json();
 	}
 
+    async function verifyAdminKey(key) {
+        const response = await fetch(`${baseUrl}/api/verify-admin`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ adminToken: key })
+        });
+        if (!response.ok) {
+             let msg = response.statusText;
+            try {
+                const json = await response.json();
+                if (json.message) msg = json.message;
+            } catch (e) {}
+			throw new Error(msg);
+        }
+        return response.json();
+    }
+
 	return {
 		fetchComments,
 		submitComment,
+        verifyAdminKey
 	};
 }

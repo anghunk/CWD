@@ -3,6 +3,8 @@
  */
 
 import { Component } from './Component.js';
+import { AdminAuthModal } from './AdminAuthModal.js';
+import { auth } from '../utils/auth.js';
 
 export class CommentForm extends Component {
 	/**
@@ -13,12 +15,15 @@ export class CommentForm extends Component {
 	 * @param {boolean} props.submitting - 是否正在提交
 	 * @param {Function} props.onSubmit - 提交回调
 	 * @param {Function} props.onFieldChange - 字段变化回调
+	 * @param {string} props.adminEmail - 管理员邮箱
+	 * @param {Function} props.onVerifyAdmin - 验证管理员回调 (returns Promise)
 	 */
 	constructor(container, props = {}) {
 		super(container, props);
 		this.state = {
 			localForm: { ...props.form },
 		};
+		this.modal = null;
 	}
 
 	render() {
@@ -26,6 +31,8 @@ export class CommentForm extends Component {
 		const { localForm } = this.state;
 
 		const canSubmit = localForm.name.trim() && localForm.email.trim() && localForm.content.trim();
+        const isAdmin = this.props.adminEmail && localForm.email.trim() === this.props.adminEmail;
+        const isVerified = isAdmin && auth.hasToken();
 
 		const root = this.createElement('form', {
 			className: 'cwd-comment-form',
@@ -48,7 +55,30 @@ export class CommentForm extends Component {
 								// 昵称
 								this.createFormField('昵称 *', 'text', 'name', localForm.name, formErrors.name),
 								// 邮箱
-								this.createFormField('邮箱 *', 'email', 'email', localForm.email, formErrors.email),
+                                this.createElement('div', {
+                                    className: 'cwd-form-field-wrapper',
+                                    children: [
+                                        this.createFormField('邮箱 *', 'email', 'email', localForm.email, formErrors.email),
+                                        isVerified ? this.createElement('div', {
+                                            className: 'cwd-admin-controls',
+                                            children: [
+                                                this.createTextElement('span', '✓ 已验证', 'cwd-admin-verified'),
+                                                this.createElement('button', {
+                                                    className: 'cwd-btn-text',
+                                                    text: '退出',
+                                                    attributes: {
+                                                        type: 'button',
+                                                        title: '清除管理员凭证',
+                                                        onClick: () => {
+                                                            auth.clearToken();
+                                                            this.render();
+                                                        }
+                                                    }
+                                                })
+                                            ]
+                                        }) : null
+                                    ]
+                                }),
 								// 网址
 								this.createFormField('网址', 'url', 'url', localForm.url, formErrors.url),
 							],
@@ -216,6 +246,9 @@ export class CommentForm extends Component {
 						value: value || '',
 						disabled: this.props.submitting,
 						onInput: (e) => this.handleFieldChange(fieldName, e.target.value),
+						onBlur: (e) => {
+							if (fieldName === 'email') this.handleEmailBlur(e.target.value);
+						}
 					},
 				}),
 				...(error ? [this.createTextElement('span', error, 'cwd-error-text')] : []),
@@ -255,5 +288,44 @@ export class CommentForm extends Component {
 			// 提交当前表单数据
 			this.props.onSubmit(this.state.localForm);
 		}
+	}
+
+	async handleEmailBlur(email) {
+		if (!email || !this.props.adminEmail) return;
+		if (email.trim() === this.props.adminEmail) {
+			// Check local storage
+			if (auth.hasToken()) {
+				// Already valid
+				return;
+			}
+			// Show modal
+			this.showAuthModal();
+		}
+	}
+
+	showAuthModal() {
+		// Create modal container if not exists
+		let modalContainer = this.elements.root.querySelector('.cwd-modal-container');
+		if (!modalContainer) {
+			modalContainer = document.createElement('div');
+			modalContainer.className = 'cwd-modal-container';
+			this.elements.root.appendChild(modalContainer);
+		}
+
+		this.modal = new AdminAuthModal(modalContainer, {
+			onCancel: () => {
+				this.modal.destroy();
+				this.modal = null;
+			},
+			onSubmit: async (key) => {
+				if (this.props.onVerifyAdmin) {
+					await this.props.onVerifyAdmin(key);
+					auth.saveToken(key);
+					this.modal.destroy();
+					this.modal = null;
+				}
+			}
+		});
+		this.modal.render();
 	}
 }

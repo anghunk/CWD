@@ -22,7 +22,7 @@ export const postComment = async (c: Context<{ Bindings: Bindings }>) => {
   if (!data || typeof data !== 'object') {
     return c.json({ message: '无效的请求体' }, 400);
   }
-  const { post_slug, content: rawContent, name: rawName, email, url, post_title, post_url } = data;
+  const { post_slug, content: rawContent, name: rawName, email, url, post_title, post_url, adminToken } = data;
   const parentId = (data as any).parent_id ?? (data as any).parentId ?? null;
   if (!post_slug || typeof post_slug !== 'string') {
     return c.json({ message: 'post_slug 必填' }, 400);
@@ -43,6 +43,44 @@ export const postComment = async (c: Context<{ Bindings: Bindings }>) => {
   
   // 1. 获取 IP (Worker 获取 IP 的标准方式)
   const ip = c.req.header('cf-connecting-ip') || "127.0.0.1";
+
+  // 1.5 管理员身份验证
+  const adminEmail = await c.env.CWD_DB.prepare('SELECT value FROM Settings WHERE key = ?').bind('comment_admin_email').first<string>('value');
+  
+  if (adminEmail && email === adminEmail) {
+    const adminKey = await c.env.CWD_DB.prepare('SELECT value FROM Settings WHERE key = ?').bind('comment_admin_key_hash').first<string>('value');
+
+    if (adminKey) {
+      const lockKey = `admin_lock:${ip}`;
+      const isLocked = await c.env.CWD_AUTH_KV.get(lockKey);
+      if (isLocked) {
+        return c.json({ message: "验证失败次数过多，请30分钟后再试" }, 403);
+      }
+
+      if (!adminToken) {
+        return c.json({ message: "请输入管理员密钥", requireAuth: true }, 401);
+      }
+
+      if (adminToken !== adminKey) {
+        const failKey = `admin_fail:${ip}`;
+        const failsStr = await c.env.CWD_AUTH_KV.get(failKey);
+        let fails = failsStr ? parseInt(failsStr) : 0;
+        fails++;
+
+        if (fails >= 3) {
+          await c.env.CWD_AUTH_KV.put(lockKey, '1', { expirationTtl: 1800 });
+          await c.env.CWD_AUTH_KV.delete(failKey);
+          return c.json({ message: "验证失败次数过多，请30分钟后再试" }, 403);
+        } else {
+          await c.env.CWD_AUTH_KV.put(failKey, fails.toString(), { expirationTtl: 3600 });
+          return c.json({ message: "密钥错误" }, 401);
+        }
+      }
+      
+      // 验证成功，清除失败记录
+      await c.env.CWD_AUTH_KV.delete(`admin_fail:${ip}`);
+    }
+  }
 
   // 2. 检查评论频率控制 (对应 canPostComment)
   // 这里建议使用 D1 查最近一条评论的时间，或者直接放行（如果使用了 Cloudflare WAF）

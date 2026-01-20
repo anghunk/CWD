@@ -32,15 +32,25 @@
           <input v-model="avatarPrefix" class="form-input" type="text" />
         </div>
         <div class="form-item">
-          <label class="form-label"
-            >允许调用的域名（多个域名用逗号分隔，留空则不限制）</label
-          >
+          <label class="form-label">允许调用的域名（多个域名用逗号分隔，留空则不限制）</label>
           <textarea
             v-model="allowedDomains"
             class="form-input"
             rows="3"
             placeholder="例如: example.com, test.com"
           ></textarea>
+        </div>
+        <div class="form-item">
+          <label class="form-label">管理员评论密钥</label>
+          <div class="form-hint" style="margin-bottom: 4px;">
+            设置后前台使用管理员邮箱评论需输入此密钥。
+          </div>
+          <input
+            v-model="commentAdminKey"
+            class="form-input"
+            placeholder="输入密钥以设置或修改"
+            autocomplete="new-password"
+          />
         </div>
         <div class="card-actions">
           <button class="card-button" :disabled="savingComment" @click="saveComment">
@@ -287,6 +297,8 @@ const commentAdminBadge = ref("");
 const avatarPrefix = ref("");
 const commentAdminEnabled = ref(false);
 const allowedDomains = ref("");
+const commentAdminKey = ref("");
+const adminKeySet = ref(false);
 const savingEmail = ref(false);
 const testingEmail = ref(false);
 const savingComment = ref(false);
@@ -344,6 +356,8 @@ async function load() {
     allowedDomains.value = commentRes.allowedDomains
       ? commentRes.allowedDomains.join(", ")
       : "";
+    commentAdminKey.value = commentRes.adminKey || "";
+    adminKeySet.value = !!commentRes.adminKeySet;
     emailGlobalEnabled.value = !!emailNotifyRes.globalEnabled;
 
     if (emailNotifyRes.templates) {
@@ -472,7 +486,9 @@ async function saveComment() {
         .split(/[,，\n]/)
         .map((d) => d.trim())
         .filter(Boolean),
+      adminKey: commentAdminKey.value || undefined,
     });
+
     showToast(res.message || "保存成功", "success");
   } catch (e: any) {
     message.value = e.message || "保存失败";

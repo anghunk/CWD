@@ -7,9 +7,11 @@ import {
 	loadEmailNotificationSettings,
 	saveEmailNotificationSettings
 } from './utils/email';
+import packageJson from '../package.json';
 
 import { getComments } from './api/public/getComments';
 import { postComment } from './api/public/postComment';
+import { verifyAdminKey } from './api/public/verifyAdminKey';
 import { adminLogin } from './api/admin/login';
 import { deleteComment } from './api/admin/deleteComment';
 import { listComments } from './api/admin/listComments';
@@ -21,13 +23,15 @@ import { setAdminEmail } from './api/admin/setAdminEmail';
 import { testEmail } from './api/admin/testEmail';
 
 const app = new Hono<{ Bindings: Bindings }>();
-const VERSION = 'v0.0.1';
+const VERSION = `v${packageJson.version}`;
 
 const COMMENT_ADMIN_EMAIL_KEY = 'comment_admin_email';
 const COMMENT_ADMIN_BADGE_KEY = 'comment_admin_badge';
 const COMMENT_AVATAR_PREFIX_KEY = 'comment_avatar_prefix';
 const COMMENT_ADMIN_ENABLED_KEY = 'comment_admin_enabled';
 const COMMENT_ALLOWED_DOMAINS_KEY = 'comment_allowed_domains';
+const COMMENT_ADMIN_KEY_HASH_KEY = 'comment_admin_key_hash';
+
 
 async function loadCommentSettings(env: Bindings) {
 	await env.CWD_DB.prepare(
@@ -38,10 +42,11 @@ async function loadCommentSettings(env: Bindings) {
 		COMMENT_ADMIN_BADGE_KEY,
 		COMMENT_AVATAR_PREFIX_KEY,
 		COMMENT_ADMIN_ENABLED_KEY,
-		COMMENT_ALLOWED_DOMAINS_KEY
+		COMMENT_ALLOWED_DOMAINS_KEY,
+		COMMENT_ADMIN_KEY_HASH_KEY
 	];
 	const { results } = await env.CWD_DB.prepare(
-		'SELECT key, value FROM Settings WHERE key IN (?, ?, ?, ?, ?)'
+		'SELECT key, value FROM Settings WHERE key IN (?, ?, ?, ?, ?, ?)'
 	)
 		.bind(...keys)
 		.all<{ key: string; value: string }>();
@@ -67,7 +72,9 @@ async function loadCommentSettings(env: Bindings) {
 		adminBadge: map.get(COMMENT_ADMIN_BADGE_KEY) ?? null,
 		avatarPrefix: map.get(COMMENT_AVATAR_PREFIX_KEY) ?? null,
 		adminEnabled,
-		allowedDomains
+		allowedDomains,
+		adminKey: map.get(COMMENT_ADMIN_KEY_HASH_KEY) ?? null,
+		adminKeySet: !!map.get(COMMENT_ADMIN_KEY_HASH_KEY)
 	};
 }
 
@@ -79,11 +86,17 @@ async function saveCommentSettings(
 		avatarPrefix?: string;
 		adminEnabled?: boolean;
 		allowedDomains?: string[];
+		adminKey?: string;
 	}
 ) {
 	await env.CWD_DB.prepare(
 		'CREATE TABLE IF NOT EXISTS Settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)'
 	).run();
+
+	let adminKeyValue: string | undefined;
+	if (settings.adminKey !== undefined) {
+		adminKeyValue = settings.adminKey;
+	}
 
 	const entries: { key: string; value: string | null | undefined }[] = [
 		{ key: COMMENT_ADMIN_EMAIL_KEY, value: settings.adminEmail },
@@ -101,6 +114,10 @@ async function saveCommentSettings(
 		{
 			key: COMMENT_ALLOWED_DOMAINS_KEY,
 			value: settings.allowedDomains ? settings.allowedDomains.join(',') : undefined
+		},
+		{
+			key: COMMENT_ADMIN_KEY_HASH_KEY,
+			value: adminKeyValue
 		}
 	];
 
@@ -152,6 +169,7 @@ app.get('/', (c) => {
 
 app.get('/api/comments', getComments);
 app.post('/api/comments', postComment);
+app.post('/api/verify-admin', verifyAdminKey);
 app.get('/api/config/comments', async (c) => {
 	try {
 		const settings = await loadCommentSettings(c.env);
@@ -215,6 +233,7 @@ app.put('/admin/settings/comments', async (c) => {
 		const rawAvatarPrefix = typeof body.avatarPrefix === 'string' ? body.avatarPrefix : '';
 		const rawAdminEnabled = body.adminEnabled;
 		const rawAllowedDomains = Array.isArray(body.allowedDomains) ? body.allowedDomains : [];
+		const rawAdminKey = typeof body.adminKey === 'string' ? body.adminKey : undefined;
 
 		const adminEmail = rawAdminEmail.trim();
 		const adminBadge = rawAdminBadge.trim();
@@ -226,6 +245,7 @@ app.put('/admin/settings/comments', async (c) => {
 		const allowedDomains = rawAllowedDomains
 			.map((d: any) => (typeof d === 'string' ? d.trim() : ''))
 			.filter(Boolean);
+		const adminKey = rawAdminKey; // Can be undefined or empty string
 
 		if (adminEmail && !isValidEmail(adminEmail)) {
 			return c.json({ message: '邮箱格式不正确' }, 400);
@@ -236,7 +256,8 @@ app.put('/admin/settings/comments', async (c) => {
 			adminBadge,
 			avatarPrefix,
 			adminEnabled,
-			allowedDomains
+			allowedDomains,
+			adminKey
 		});
 
 		return c.json({ message: '保存成功' });

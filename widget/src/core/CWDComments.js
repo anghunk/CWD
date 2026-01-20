@@ -159,6 +159,7 @@ export class CWDComments {
 			}
 
 			const api = createApiClient(this.config);
+			this.api = api;
 			this.store = createCommentStore(this.config, api.fetchComments.bind(api), api.submitComment.bind(api));
 
 			this.unsubscribe = this.store.store.subscribe((state) => {
@@ -230,6 +231,8 @@ export class CWDComments {
 				submitting: state.submitting,
 				onSubmit: () => this._handleSubmit(),
 				onFieldChange: (field, value) => this.store.updateFormField(field, value),
+				adminEmail: this.config.adminEmail,
+				onVerifyAdmin: (key) => this.api.verifyAdminKey(key)
 			});
 			this.commentForm.render();
 		}
@@ -326,6 +329,7 @@ export class CWDComments {
 				form: state.form,
 				formErrors: state.formErrors,
 				submitting: state.submitting,
+				adminEmail: this.config.adminEmail
 			});
 		}
 
@@ -415,6 +419,7 @@ export class CWDComments {
 
 		if (shouldReload) {
 			const api = createApiClient(this.config);
+			this.api = api;
 
 			if (this.unsubscribe) {
 				this.unsubscribe();

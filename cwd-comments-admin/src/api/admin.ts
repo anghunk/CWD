@@ -40,6 +40,8 @@ export type CommentSettingsResponse = {
 	avatarPrefix: string | null;
 	adminEnabled: boolean;
 	allowedDomains?: string[];
+	adminKey?: string | null;
+	adminKeySet?: boolean;
 };
 
 export type EmailNotifySettingsResponse = {
@@ -132,6 +134,7 @@ export function saveCommentSettings(data: {
 	avatarPrefix?: string;
 	adminEnabled?: boolean;
 	allowedDomains?: string[];
+	adminKey?: string;
 }): Promise<{ message: string }> {
 	return put<{ message: string }>('/admin/settings/comments', data);
 }
@@ -143,4 +146,3 @@ export function exportComments(): Promise<any[]> {
 export function importComments(data: any[]): Promise<{ message: string }> {
 	return post<{ message: string }>('/admin/comments/import', data);
 }
-

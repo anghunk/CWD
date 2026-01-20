@@ -2,6 +2,8 @@
  * 状态管理 - 使用发布-订阅模式
  */
 
+import { auth } from '../utils/auth.js';
+
 // localStorage 键名
 const STORAGE_KEY = 'cwd_user_info';
 
@@ -192,6 +194,7 @@ export function createCommentStore(config, fetchComments, submitComment) {
 				email: form.email,
 				url: form.url,
 				content: form.content,
+				adminToken: auth.getToken() // Add token if exists
 			});
 
 			// 清空评论内容
@@ -248,6 +251,7 @@ export function createCommentStore(config, fetchComments, submitComment) {
 				url: state.form.url,
 				content: state.replyContent,
 				parentId,
+				adminToken: auth.getToken()
 			});
 
 			// 清空回复内容并关闭回复框
