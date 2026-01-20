@@ -32,12 +32,12 @@
                 v-if="item.avatar"
                 :src="item.avatar"
                 class="cell-avatar"
-                :alt="item.author"
+                :alt="item.name"
               />
               <div class="cell-author-main">
-                <div class="cell-author-name">{{ item.author }}</div>
+                <div class="cell-author-name">{{ item.name }}</div>
                 <div class="cell-author-email">{{ item.email }}</div>
-                <span class="cell-time">{{ formatDate(item.pubDate) }}</span>
+                <span class="cell-time">{{ formatDate(item.created) }}</span>
               </div>
             </div>
           </div>
@@ -138,10 +138,10 @@ const filteredComments = computed(() => {
   return comments.value.filter((item) => item.status === statusFilter.value);
 });
 
-function formatDate(value: string) {
+function formatDate(value: number) {
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) {
-    return value;
+    return String(value);
   }
   return d.toLocaleString();
 }

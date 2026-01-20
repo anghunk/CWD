@@ -14,7 +14,7 @@ export const listComments = async (c: Context<{ Bindings: Bindings }>) => {
 	).first<{ count: number }>();
 
 	const { results } = await c.env.CWD_DB.prepare(
-		'SELECT * FROM Comment ORDER BY pub_date DESC LIMIT ? OFFSET ?'
+		'SELECT * FROM Comment ORDER BY created DESC LIMIT ? OFFSET ?'
 	)
 		.bind(limit, offset)
 		.all();
@@ -30,8 +30,8 @@ export const listComments = async (c: Context<{ Bindings: Bindings }>) => {
 	const data = await Promise.all(
 		results.map(async (row: any) => ({
 			id: row.id,
-			pubDate: row.pub_date,
-			author: row.author,
+			created: row.created,
+			name: row.name,
 			email: row.email,
 			postSlug: row.post_slug,
 			url: row.url,
@@ -39,6 +39,7 @@ export const listComments = async (c: Context<{ Bindings: Bindings }>) => {
 			contentText: row.content_text,
 			contentHtml: row.content_html,
 			status: row.status,
+			ua: row.ua,
 			avatar: await getCravatar(row.email, avatarPrefix || undefined)
 		}))
 	);

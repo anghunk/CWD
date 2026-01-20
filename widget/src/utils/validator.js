@@ -45,7 +45,7 @@ export function validateCommentContent(content) {
 /**
  * 验证评论表单
  * @param {Object} data - 表单数据
- * @param {string} data.author - 昵称
+ * @param {string} data.name - 昵称
  * @param {string} data.email - 邮箱
  * @param {string} data.url - 网址
  * @param {string} data.content - 评论内容
@@ -55,10 +55,10 @@ export function validateCommentForm(data) {
   const errors = {};
 
   // 验证昵称
-  if (!data.author || data.author.trim().length === 0) {
-    errors.author = '请输入昵称';
-  } else if (data.author.length > 50) {
-    errors.author = '昵称不能超过 50 字';
+  if (!data.name || data.name.trim().length === 0) {
+    errors.name = '请输入昵称';
+  } else if (data.name.length > 50) {
+    errors.name = '昵称不能超过 50 字';
   }
 
   // 验证邮箱
@@ -88,7 +88,7 @@ export function validateCommentForm(data) {
 /**
  * 验证回复所需的用户信息
  * @param {Object} data - 用户信息
- * @param {string} data.author - 昵称
+ * @param {string} data.name - 昵称
  * @param {string} data.email - 邮箱
  * @param {string} data.url - 网址
  * @returns {{valid: boolean, errors: Object<string, string>}}
@@ -97,10 +97,10 @@ export function validateReplyUserInfo(data) {
   const errors = {};
 
   // 验证昵称
-  if (!data.author || data.author.trim().length === 0) {
-    errors.author = '请输入昵称';
-  } else if (data.author.length > 50) {
-    errors.author = '昵称不能超过 50 字';
+  if (!data.name || data.name.trim().length === 0) {
+    errors.name = '请输入昵称';
+  } else if (data.name.length > 50) {
+    errors.name = '昵称不能超过 50 字';
   }
 
   // 验证邮箱

@@ -39,7 +39,7 @@ export function createApiClient(config) {
   /**
    * 提交评论
    * @param {Object} data - 评论数据
-   * @param {string} data.author - 昵称
+   * @param {string} data.name - 昵称
    * @param {string} data.email - 邮箱
    * @param {string} data.url - 网址（可选）
    * @param {string} data.content - 评论内容
@@ -56,7 +56,7 @@ export function createApiClient(config) {
         post_slug: config.postSlug,
         post_title: config.postTitle,
         post_url: config.postUrl,
-        author: data.author,
+        name: data.name,
         email: data.email,
         url: data.url || undefined,
         content: data.content,

@@ -45,7 +45,7 @@ export class CommentItem extends Component {
             this.createElement('img', {
               attributes: {
                 src: comment.avatar,
-                alt: comment.author,
+                alt: comment.name,
                 loading: 'lazy'
               }
             })
@@ -74,11 +74,11 @@ export class CommentItem extends Component {
                                 target: '_blank',
                                 rel: 'noopener noreferrer'
                               },
-                              text: comment.author
+                              text: comment.name
                             })
                           ]
                         })
-                      : this.createTextElement('span', comment.author, 'cwd-author-name'),
+                      : this.createTextElement('span', comment.name, 'cwd-author-name'),
                     // 博主标识
                     ...(isAdmin ? [
                       this.createTextElement('span', `${adminBadge}`, 'cwd-admin-badge')
@@ -102,7 +102,7 @@ export class CommentItem extends Component {
                       },
                       text: '回复'
                     }),
-                    this.createTextElement('span', formatRelativeTime(comment.pubDate), 'cwd-comment-time')
+                    this.createTextElement('span', formatRelativeTime(comment.created), 'cwd-comment-time')
                   ]
                 })
               ]
@@ -140,7 +140,7 @@ export class CommentItem extends Component {
       const replyContainer = root.querySelector('.cwd-reply-editor-container');
       if (replyContainer) {
         this.replyEditor = new ReplyEditor(replyContainer, {
-          replyToAuthor: comment.author,
+          replyToAuthor: comment.name,
           content: this.props.replyContent,
           error: this.props.replyError,
           submitting: this.props.submitting,
@@ -212,7 +212,7 @@ export class CommentItem extends Component {
       if (isReplying && replyContainer) {
         // 显示回复编辑器
         this.replyEditor = new ReplyEditor(replyContainer, {
-          replyToAuthor: comment.author,
+          replyToAuthor: comment.name,
           content: this.props.replyContent,
           error: this.props.replyError,
           submitting: this.props.submitting,

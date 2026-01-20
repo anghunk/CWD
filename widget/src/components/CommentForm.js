@@ -25,7 +25,7 @@ export class CommentForm extends Component {
 		const { formErrors, submitting } = this.props;
 		const { localForm } = this.state;
 
-		const canSubmit = localForm.author.trim() && localForm.email.trim() && localForm.content.trim();
+		const canSubmit = localForm.name.trim() && localForm.email.trim() && localForm.content.trim();
 
 		const root = this.createElement('form', {
 			className: 'cwd-comment-form',
@@ -46,7 +46,7 @@ export class CommentForm extends Component {
 							className: 'cwd-form-row',
 							children: [
 								// 昵称
-								this.createFormField('昵称 *', 'text', 'author', localForm.author, formErrors.author),
+								this.createFormField('昵称 *', 'text', 'name', localForm.name, formErrors.name),
 								// 邮箱
 								this.createFormField('邮箱 *', 'email', 'email', localForm.email, formErrors.email),
 								// 网址
@@ -103,13 +103,13 @@ export class CommentForm extends Component {
 		// 只在非提交状态时同步表单数据（避免覆盖用户正在输入的内容）
 		if (!this.props.submitting && this.props.form !== prevProps.form) {
 			// 保留当前正在输入的内容
-			const currentAuthor = this.state.localForm.author || '';
+			const currentName = this.state.localForm.name || '';
 			const currentEmail = this.state.localForm.email || '';
 			const currentUrl = this.state.localForm.url || '';
 			const currentContent = this.state.localForm.content || '';
 
 			this.state.localForm = {
-				author: this.props.form.author || currentAuthor,
+				name: this.props.form.name || currentName,
 				email: this.props.form.email || currentEmail,
 				url: this.props.form.url || currentUrl,
 				content: this.props.form.content !== undefined ? this.props.form.content : currentContent,
@@ -134,7 +134,7 @@ export class CommentForm extends Component {
 		const { formErrors, submitting } = this.props;
 		const { localForm } = this.state;
 
-		const canSubmit = localForm.author.trim() && localForm.email.trim() && localForm.content.trim();
+		const canSubmit = localForm.name.trim() && localForm.email.trim() && localForm.content.trim();
 
 		// 更新提交按钮状态
 		const submitBtn = this.elements.root.querySelector('button[type="submit"]');
@@ -159,8 +159,8 @@ export class CommentForm extends Component {
 	updateErrors(formErrors) {
 		if (!this.elements.root) return;
 
-		const authorInput = this.elements.root.querySelector('input[name="author"]');
-		this.updateFieldError(authorInput, formErrors?.author);
+		const nameInput = this.elements.root.querySelector('input[name="name"]');
+		this.updateFieldError(nameInput, formErrors?.name);
 
 		const emailInput = this.elements.root.querySelector('input[name="email"]');
 		this.updateFieldError(emailInput, formErrors?.email);
@@ -227,12 +227,12 @@ export class CommentForm extends Component {
 	 * 设置输入框的值
 	 */
 	setInputValues(root, form) {
-		const authorInput = root.querySelector('input[name="author"]');
+		const nameInput = root.querySelector('input[name="name"]');
 		const emailInput = root.querySelector('input[name="email"]');
 		const urlInput = root.querySelector('input[name="url"]');
 		const contentTextarea = root.querySelector('textarea');
 
-		if (authorInput) authorInput.value = form.author || '';
+		if (nameInput) nameInput.value = form.name || '';
 		if (emailInput) emailInput.value = form.email || '';
 		if (urlInput) urlInput.value = form.url || '';
 		if (contentTextarea) contentTextarea.value = form.content || '';

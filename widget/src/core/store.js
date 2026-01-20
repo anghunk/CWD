@@ -15,7 +15,7 @@ function loadUserInfo() {
     if (data) {
       const parsed = JSON.parse(data);
       return {
-        author: parsed.author || '',
+        name: parsed.name || '',
         email: parsed.email || '',
         url: parsed.url || ''
       };
@@ -23,18 +23,18 @@ function loadUserInfo() {
   } catch (e) {
     console.error('读取用户信息失败:', e);
   }
-  return { author: '', email: '', url: '' };
+  return { name: '', email: '', url: '' };
 }
 
 /**
  * 保存用户信息到 localStorage
- * @param {string} author - 昵称
+ * @param {string} name - 昵称
  * @param {string} email - 邮箱
  * @param {string} url - 网址
  */
-function saveUserInfo(author, email, url) {
+function saveUserInfo(name, email, url) {
   try {
-    const data = { author, email, url };
+    const data = { name, email, url };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch (e) {
     console.error('保存用户信息失败:', e);
@@ -115,7 +115,7 @@ export function createCommentStore(config, fetchComments, submitComment) {
 
     // 表单数据
     form: {
-      author: savedInfo.author || '',
+      name: savedInfo.name || '',
       email: savedInfo.email || '',
       url: savedInfo.url || '',
       content: ''
@@ -131,8 +131,8 @@ export function createCommentStore(config, fetchComments, submitComment) {
 
   // 监听用户信息变化，自动保存到 localStorage
   store.subscribe((state) => {
-    if (state.form.author || state.form.email || state.form.url) {
-      saveUserInfo(state.form.author, state.form.email, state.form.url);
+    if (state.form.name || state.form.email || state.form.url) {
+      saveUserInfo(state.form.name, state.form.email, state.form.url);
     }
   });
 
@@ -194,7 +194,7 @@ export function createCommentStore(config, fetchComments, submitComment) {
 
     try {
       await submitComment({
-        author: form.author,
+        name: form.name,
         email: form.email,
         url: form.url,
         content: form.content
@@ -249,7 +249,7 @@ export function createCommentStore(config, fetchComments, submitComment) {
 
     try {
       await submitComment({
-        author: state.form.author,
+        name: state.form.name,
         email: state.form.email,
         url: state.form.url,
         content: state.replyContent,

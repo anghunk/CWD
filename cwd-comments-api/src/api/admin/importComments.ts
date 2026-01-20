@@ -25,16 +25,16 @@ export const importComments = async (c: Context<{ Bindings: Bindings }>) => {
 		const stmts = comments.map((comment: any) => {
 			const {
 				id,
-				pub_date,
+				created,
 				post_slug,
-				author,
+				name,
 				email,
 				url,
 				ip_address,
 				device,
 				os,
 				browser,
-				user_agent,
+				ua,
 				content_text,
 				content_html,
 				parent_id,
@@ -48,15 +48,26 @@ export const importComments = async (c: Context<{ Bindings: Bindings }>) => {
             // 构建 SQL。
             // 能够处理 id 存在或不存在的情况
             const fields = [
-                'pub_date', 'post_slug', 'author', 'email', 'url',
-                'ip_address', 'device', 'os', 'browser', 'user_agent',
+                'created', 'post_slug', 'name', 'email', 'url',
+                'ip_address', 'device', 'os', 'browser', 'ua',
                 'content_text', 'content_html', 'parent_id', 'status'
             ];
             const values = [
-                pub_date, post_slug, author, email, url,
-                ip_address, device, os, browser, user_agent,
-                content_text, content_html, parent_id, status
-            ].map(v => v === undefined ? null : v);
+                created || Date.now(),
+                post_slug || "",
+                name || "Anonymous",
+                email || "",
+                url || null,
+                ip_address || null,
+                device || null,
+                os || null,
+                browser || null,
+                ua || null,
+                content_text || "",
+                content_html || "",
+                parent_id || null,
+                status || "approved"
+            ];
 
             if (id) {
                 fields.unshift('id');

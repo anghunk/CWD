@@ -4,11 +4,11 @@
 
 /**
  * 格式化时间（3天内显示相对时间，超过3天显示完整日期）
- * @param {string} dateStr - 日期字符串
+ * @param {string|number} dateValue - 日期字符串或时间戳
  * @returns {string}
  */
-export function formatRelativeTime(dateStr) {
-  const date = new Date(dateStr);
+export function formatRelativeTime(dateValue) {
+  const date = new Date(dateValue);
   const now = new Date();
   const diff = now.getTime() - date.getTime();
 
@@ -32,16 +32,16 @@ export function formatRelativeTime(dateStr) {
   }
 
   // 超过3天显示完整日期
-  return formatDateTime(dateStr);
+  return formatDateTime(dateValue);
 }
 
 /**
  * 格式化日期时间
- * @param {string} dateStr - 日期字符串
+ * @param {string|number} dateValue - 日期字符串或时间戳
  * @returns {string}
  */
-export function formatDateTime(dateStr) {
-  const date = new Date(dateStr);
+export function formatDateTime(dateValue) {
+  const date = new Date(dateValue);
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
@@ -53,11 +53,11 @@ export function formatDateTime(dateStr) {
 
 /**
  * 格式化日期
- * @param {string} dateStr - 日期字符串
+ * @param {string|number} dateValue - 日期字符串或时间戳
  * @returns {string}
  */
-export function formatDate(dateStr) {
-  const date = new Date(dateStr);
+export function formatDate(dateValue) {
+  const date = new Date(dateValue);
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
@@ -66,11 +66,11 @@ export function formatDate(dateStr) {
 
 /**
  * 格式化时间
- * @param {string} dateStr - 日期字符串
+ * @param {string|number} dateValue - 日期字符串或时间戳
  * @returns {string}
  */
-export function formatTime(dateStr) {
-  const date = new Date(dateStr);
+export function formatTime(dateValue) {
+  const date = new Date(dateValue);
   const hours = String(date.getHours()).padStart(2, '0');
   const minutes = String(date.getMinutes()).padStart(2, '0');
   const seconds = String(date.getSeconds()).padStart(2, '0');

@@ -15,12 +15,12 @@ export const getComments = async (c: Context<{ Bindings: Bindings }>) => {
   try {
     // 1. 查询审核通过的评论
     const query = `
-      SELECT id, author, email, url, content_text as contentText, 
-             content_html as contentHtml, pub_date as pubDate, parent_id as parentId,
+      SELECT id, name, email, url, content_text as contentText, 
+             content_html as contentHtml, created, parent_id as parentId,
              post_slug as postSlug
       FROM Comment 
       WHERE post_slug = ? AND status = "approved"
-      ORDER BY pub_date DESC
+      ORDER BY created DESC
     `
     const { results } = await c.env.CWD_DB.prepare(query).bind(post_slug).all()
 
@@ -52,7 +52,7 @@ export const getComments = async (c: Context<{ Bindings: Bindings }>) => {
           // 获取直接父评论的作者名
           const parentComment = commentMap.get(comment.parentId)
           if (parentComment) {
-            comment.replyToAuthor = parentComment.author
+            comment.replyToAuthor = parentComment.name
           }
 
           // 向上查找根评论
@@ -74,7 +74,7 @@ export const getComments = async (c: Context<{ Bindings: Bindings }>) => {
       // 对每个根评论的 replies 按时间正序排列
       rootComments.forEach(root => {
         root.replies.sort((a: any, b: any) =>
-          new Date(a.pubDate).getTime() - new Date(b.pubDate).getTime()
+          a.created - b.created
         )
       })
 

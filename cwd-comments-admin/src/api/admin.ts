@@ -8,8 +8,8 @@ export type AdminLoginResponse = {
 
 export type CommentItem = {
 	id: number;
-	pubDate: string;
-	author: string;
+	created: number;
+	name: string;
 	email: string;
 	avatar: string;
 	postSlug: string;
@@ -18,6 +18,7 @@ export type CommentItem = {
 	contentText: string;
 	contentHtml: string;
 	status: string;
+	ua?: string | null;
 };
 
 export type CommentListResponse = {

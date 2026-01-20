@@ -22,7 +22,7 @@ export const postComment = async (c: Context<{ Bindings: Bindings }>) => {
   if (!data || typeof data !== 'object') {
     return c.json({ message: '无效的请求体' }, 400);
   }
-  const { post_slug, content: rawContent, author: rawAuthor, email, url, post_title, post_url } = data;
+  const { post_slug, content: rawContent, name: rawName, email, url, post_title, post_url } = data;
   const parentId = (data as any).parent_id ?? (data as any).parentId ?? null;
   if (!post_slug || typeof post_slug !== 'string') {
     return c.json({ message: 'post_slug 必填' }, 400);
@@ -30,7 +30,7 @@ export const postComment = async (c: Context<{ Bindings: Bindings }>) => {
   if (!rawContent || typeof rawContent !== 'string') {
     return c.json({ message: '评论内容不能为空' }, 400);
   }
-  if (!rawAuthor || typeof rawAuthor !== 'string') {
+  if (!rawName || typeof rawName !== 'string') {
     return c.json({ message: '昵称不能为空' }, 400);
   }
   if (!email || typeof email !== 'string') {
@@ -39,7 +39,7 @@ export const postComment = async (c: Context<{ Bindings: Bindings }>) => {
   if (!isValidEmail(email)) {
     return c.json({ message: '邮箱格式不正确' }, 400);
   }
-  const userAgent = c.req.header('user-agent') || "";
+  const ua = c.req.header('user-agent') || "";
   
   // 1. 获取 IP (Worker 获取 IP 的标准方式)
   const ip = c.req.header('cf-connecting-ip') || "127.0.0.1";
@@ -47,11 +47,11 @@ export const postComment = async (c: Context<{ Bindings: Bindings }>) => {
   // 2. 检查评论频率控制 (对应 canPostComment)
   // 这里建议使用 D1 查最近一条评论的时间，或者直接放行（如果使用了 Cloudflare WAF）
   const lastComment = await c.env.CWD_DB.prepare(
-    'SELECT pub_date FROM Comment WHERE ip_address = ? ORDER BY pub_date DESC LIMIT 1'
-  ).bind(ip).first<{ pub_date: string }>();
+    'SELECT created FROM Comment WHERE ip_address = ? ORDER BY created DESC LIMIT 1'
+  ).bind(ip).first<{ created: number }>();
 
   if (lastComment) {
-    const lastTime = new Date(lastComment.pub_date).getTime();
+    const lastTime = lastComment.created;
     if (Date.now() - lastTime < 10 * 1000) {
       return c.json({ message: "评论频繁，等10s后再试" }, 429);
     }
@@ -71,7 +71,7 @@ export const postComment = async (c: Context<{ Bindings: Bindings }>) => {
   // 3. 准备数据
   const cleanedContent = checkContent(rawContent);
   const contentText = cleanedContent;
-  const author = checkContent(rawAuthor);
+  const name = checkContent(rawName);
 
   // Markdown 渲染与 XSS 过滤
   const html = await marked.parse(cleanedContent, { async: true });
@@ -89,32 +89,32 @@ export const postComment = async (c: Context<{ Bindings: Bindings }>) => {
   console.log('PostComment:request', {
     postSlug: post_slug,
     hasParent: parentId !== null && parentId !== undefined,
-    author,
+    name,
     email,
     ip
   });
-  const uaParser = new UAParser(userAgent);
+  const uaParser = new UAParser(ua);
   const uaResult = uaParser.getResult();
 
   // 4. 写入 D1 数据库
   try {
     const { success } = await c.env.CWD_DB.prepare(`
       INSERT INTO Comment (
-        pub_date, post_slug, author, email, url, ip_address, 
-        os, browser, device, user_agent, content_text, content_html, 
+        created, post_slug, name, email, url, ip_address, 
+        os, browser, device, ua, content_text, content_html, 
         parent_id, status
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
-      new Date().toISOString(),
+      Date.now(),
       post_slug,
-      author,
+      name,
       email,
       url || null,
       ip,
       `${uaResult.os.name || ""} ${uaResult.os.version || ""}`.trim(),
       `${uaResult.browser.name || ""} ${uaResult.browser.version || ""}`.trim(),
       uaResult.device.model || uaResult.device.type || "Desktop",
-      userAgent,
+      ua,
       contentText,
       contentHtml,
       parentId || null,
@@ -156,8 +156,8 @@ export const postComment = async (c: Context<{ Bindings: Bindings }>) => {
             const isAdminReply = !!adminEmail && email === adminEmail;
 
             const parentComment = await c.env.CWD_DB.prepare(
-              "SELECT author, email, content_html FROM Comment WHERE id = ?"
-            ).bind(parentId).first<{ author: string, email: string, content_html: string }>();
+              "SELECT name, email, content_html FROM Comment WHERE id = ?"
+            ).bind(parentId).first<{ name: string, email: string, content_html: string }>();
 
             if (parentComment && parentComment.email && parentComment.email !== email) {
               let canSendUserMail = true;
@@ -173,14 +173,14 @@ export const postComment = async (c: Context<{ Bindings: Bindings }>) => {
               if (canSendUserMail && isValidEmail(parentComment.email)) {
                 console.log('PostComment:mailDispatch:userReply:send', {
                   toEmail: parentComment.email,
-                  toName: parentComment.author
+                  toName: parentComment.name
                 });
                 await sendCommentReplyNotification(c.env, {
                   toEmail: parentComment.email,
-                  toName: parentComment.author,
+                  toName: parentComment.name,
                   postTitle: data.post_title,
                   parentComment: parentComment.content_html,
-                  replyAuthor: author,
+                  replyAuthor: name,
                   replyContent: contentHtml,
                   postUrl: data.post_url,
                 }, notifySettings.smtp);
@@ -202,7 +202,7 @@ export const postComment = async (c: Context<{ Bindings: Bindings }>) => {
               await sendCommentNotification(c.env, {
                 postTitle: data.post_title,
                 postUrl: data.post_url,
-                commentAuthor: author,
+                commentAuthor: name,
                 commentContent: contentHtml
               }, notifySettings.smtp);
               await c.env.CWD_DB.prepare(
