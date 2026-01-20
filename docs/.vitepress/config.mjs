@@ -26,9 +26,9 @@ export default defineConfig({
 
 		sidebar: [
 			{
-				text: '配置',
+				text: '快速开始',
 				items: [
-					{ text: '快速开始', link: '/guide/getting-started' },
+					{ text: '项目介绍', link: '/guide/getting-started' },
 					{ text: '后端配置', link: '/guide/backend-config' },
 					{ text: '前端配置', link: '/guide/frontend-config' },
 				],

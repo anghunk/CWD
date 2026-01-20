@@ -100,9 +100,49 @@
         >
           上一页
         </button>
-        <span class="pagination-info"
-          >{{ pagination.page }} / {{ pagination.total }}</span
+        <button
+          class="pagination-button"
+          :class="{ 'pagination-button-active': pagination.page === 1 }"
+          :disabled="pagination.page === 1"
+          @click="goPage(1)"
         >
+          1
+        </button>
+        <span
+          v-if="visiblePages.length && visiblePages[0] > 2"
+          class="pagination-ellipsis"
+        >
+          ...
+        </span>
+        <button
+          v-for="page in visiblePages"
+          v-if="page !== 1 && page !== pagination.total"
+          :key="page"
+          class="pagination-button"
+          :class="{ 'pagination-button-active': page === pagination.page }"
+          :disabled="page === pagination.page"
+          @click="goPage(page)"
+        >
+          {{ page }}
+        </button>
+        <span
+          v-if="
+            visiblePages.length &&
+            visiblePages[visiblePages.length - 1] < pagination.total - 1
+          "
+          class="pagination-ellipsis"
+        >
+          ...
+        </span>
+        <button
+          v-if="pagination.total > 1"
+          class="pagination-button"
+          :class="{ 'pagination-button-active': pagination.page === pagination.total }"
+          :disabled="pagination.page === pagination.total"
+          @click="goPage(pagination.total)"
+        >
+          {{ pagination.total }}
+        </button>
         <button
           class="pagination-button"
           :disabled="pagination.page >= pagination.total"
@@ -110,6 +150,19 @@
         >
           下一页
         </button>
+        <div class="pagination-jump">
+          <span>跳转到</span>
+          <input
+            v-model="jumpPageInput"
+            class="pagination-input"
+            type="number"
+            min="1"
+            :max="pagination.total"
+            @keyup.enter="handleJumpPage"
+          />
+          <span>页</span>
+          <button class="pagination-button" @click="handleJumpPage">确定</button>
+        </div>
       </div>
     </div>
   </div>
@@ -130,12 +183,36 @@ const pagination = ref<{ page: number; total: number }>({ page: 1, total: 1 });
 const loading = ref(false);
 const error = ref("");
 const statusFilter = ref("");
+const jumpPageInput = ref("");
 
 const filteredComments = computed(() => {
   if (!statusFilter.value) {
     return comments.value;
   }
   return comments.value.filter((item) => item.status === statusFilter.value);
+});
+
+const visiblePages = computed(() => {
+  const total = pagination.value.total;
+  const current = pagination.value.page;
+  const maxVisible = 5;
+  if (total <= maxVisible) {
+    return Array.from({ length: total }, (_, index) => index + 1);
+  }
+  let start = current - Math.floor(maxVisible / 2);
+  let end = current + Math.floor(maxVisible / 2);
+  if (start < 1) {
+    start = 1;
+    end = maxVisible;
+  } else if (end > total) {
+    end = total;
+    start = total - maxVisible + 1;
+  }
+  const pages: number[] = [];
+  for (let i = start; i <= end; i += 1) {
+    pages.push(i);
+  }
+  return pages;
 });
 
 function formatDate(value: number) {
@@ -179,6 +256,19 @@ async function goPage(page: number) {
     return;
   }
   await loadComments(page);
+}
+
+function handleJumpPage() {
+  const value = Number(jumpPageInput.value);
+  if (!Number.isFinite(value)) {
+    return;
+  }
+  const page = Math.floor(value);
+  if (page < 1 || page > pagination.value.total) {
+    return;
+  }
+  jumpPageInput.value = "";
+  loadComments(page);
 }
 
 async function changeStatus(item: CommentItem, status: string) {
@@ -269,12 +359,12 @@ onMounted(() => {
   border: 1px solid #d0d7de;
   border-radius: 6px;
   overflow: hidden;
+  overflow-x: auto;
 }
 
 .table-header {
   display: flex;
   background-color: #f6f8fa;
-  border-bottom: 1px solid #d0d7de;
 }
 
 .table-row {
@@ -347,6 +437,8 @@ onMounted(() => {
   font-weight: 500;
   color: #57606a;
   align-items: center;
+  background-color: #f6f8fa;
+  border-bottom: 1px solid #d0d7de;
 }
 
 .cell-id {
@@ -474,7 +566,7 @@ onMounted(() => {
 }
 
 .pagination {
-  margin-top: 20px;
+  margin-top: 30px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -494,8 +586,33 @@ onMounted(() => {
   cursor: not-allowed;
 }
 
-.pagination-info {
-  font-size: 13px;
+.pagination-button-active {
+  background-color: #0969da;
+  color: #ffffff;
+  border-color: #0969da;
+}
+
+.pagination-ellipsis {
+  padding: 0 2px;
+  font-size: 12px;
   color: #57606a;
+}
+
+.pagination-jump {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #57606a;
+}
+
+.pagination-input {
+  width: 60px;
+  height: 24px;
+  box-sizing: border-box;
+  padding: 2px 4px;
+  border-radius: 4px;
+  border: 1px solid #d0d7de;
+  font-size: 12px;
 }
 </style>

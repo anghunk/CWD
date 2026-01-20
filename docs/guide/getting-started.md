@@ -7,6 +7,8 @@ Cloudflare Worker 版本基于 Cloudflare Workers + D1 + KV 实现，无需服�
 
 [文档地址](https://cwd-comments-docs.zishu.me)
 
+![](https://github.com/user-attachments/assets/6ac091d8-e349-4d40-9d68-485817f63236)
+
 ## 特性
 
 - ⚡️ **极速响应**：基于 Cloudflare 全球边缘网络
