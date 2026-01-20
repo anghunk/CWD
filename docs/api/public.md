@@ -1,8 +1,8 @@
 # 公开 API
 
-本节描述无需认证即可访问的公开接口，包括评论获取、评论提交以及评论设置获取。
+无需认证即可访问的公开接口，包括评论获取、评论提交以及评论设置获取。
 
-遵循 OpenAPI 风格进行组织，包含路径、方法、参数、请求体和响应示例。
+包含路径、方法、参数、请求体和响应示例。
 
 ## GET /api/comments
 
@@ -109,7 +109,7 @@
 
 ```json
 {
-  "post_slug": "/blog/hello-world",
+  "post_slug": "https://example.com/blog/hello-world",
   "post_title": "博客标题，可选",
   "post_url": "https://example.com/blog/hello-world",
   "author": "张三",
@@ -122,16 +122,16 @@
 
 #### 字段说明
 
-| 字段名       | 类型   | 必填 | 说明                                                         |
-| ------------ | ------ | ---- | ------------------------------------------------------------ |
-| `post_slug`  | string | 是   | 文章唯一标识符，应与前端组件初始化时的 `postSlug` 值一致    |
-| `post_title` | string | 否   | 文章标题，用于邮件通知内容                                   |
-| `post_url`   | string | 否   | 文章 URL，用于邮件通知中的跳转链接                           |
-| `author`     | string | 是   | 评论者昵称                                                   |
-| `email`      | string | 是   | 评论者邮箱，需为合法邮箱格式                                 |
-| `url`        | string | 否   | 评论者个人主页或站点地址                                     |
-| `content`    | string | 是   | 评论内容，内部会过滤 `<script>...</script>` 片段             |
-| `parent_id`  | number | 否   | 父评论 ID，用于回复功能；缺省或 `null` 表示根评论           |
+| 字段名       | 类型   | 必填 | 说明                                                                                                          |
+| ------------ | ------ | ---- | ------------------------------------------------------------------------------------------------------------- |
+| `post_slug`  | string | 是   | 文章唯一标识符，应与前端组件初始化时的 `postSlug` 值一致，`window.location.origin + window.location.pathname` |
+| `post_title` | string | 否   | 文章标题，用于邮件通知内容                                                                                    |
+| `post_url`   | string | 否   | 文章 URL，用于邮件通知中的跳转链接                                                                            |
+| `author`     | string | 是   | 评论者昵称                                                                                                    |
+| `email`      | string | 是   | 评论者邮箱，需为合法邮箱格式                                                                                  |
+| `url`        | string | 否   | 评论者个人主页或站点地址                                                                                      |
+| `content`    | string | 是   | 评论内容，内部会过滤 `<script>...</script>` 片段                                                              |
+| `parent_id`  | number | 否   | 父评论 ID，用于回复功能；缺省或 `null` 表示根评论                                                             |
 
 ### 成功响应
 

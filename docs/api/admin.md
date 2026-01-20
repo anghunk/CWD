@@ -10,8 +10,6 @@ Authorization: Bearer <token>
 
 Token 通过登录接口获取，有效期为 24 小时。
 
-本节按 OpenAPI 风格描述每个接口的请求 / 响应结构，并补充鉴权和错误码说明。
-
 ## POST /admin/login
 
 管理员登录，获取后续调用其他管理员接口所需的临时 Token。
@@ -248,6 +246,52 @@ Token 通过登录接口获取，有效期为 24 小时。
   ```json
   {
     "message": "Delete operation failed"
+  }
+  ```
+
+## GET /admin/comments/export
+
+导出所有评论数据，返回格式为 JSON，字段与数据库结构一致。
+
+- 方法：`GET`
+- 路径：`/admin/comments/export`
+- 鉴权：需要（Bearer Token）
+
+### 成功响应
+
+- 状态码：`200`
+
+```json
+[
+  {
+    "id": 1,
+    "pub_date": "2026-01-13 10:00:00",
+    "post_slug": "/blog/hello-world",
+    "author": "张三",
+    "email": "zhangsan@example.com",
+    "url": "https://zhangsan.me",
+    "ip_address": "127.0.0.1",
+    "device": "Desktop",
+    "os": "Windows 10",
+    "browser": "Chrome 90",
+    "user_agent": "Mozilla/5.0 ...",
+    "content_text": "很棒的文章！",
+    "content_html": "很棒的文章！",
+    "parent_id": null,
+    "status": "approved"
+  }
+]
+```
+
+### 错误响应
+
+- 导出失败：
+
+  - 状态码：`500`
+
+  ```json
+  {
+    "message": "导出失败"
   }
   ```
 

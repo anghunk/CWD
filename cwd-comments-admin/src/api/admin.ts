@@ -124,3 +124,8 @@ export function saveCommentSettings(data: {
 }): Promise<{ message: string }> {
 	return put<{ message: string }>('/admin/settings/comments', data);
 }
+
+export function exportComments(): Promise<any[]> {
+	return get<any[]>('/admin/comments/export');
+}
+

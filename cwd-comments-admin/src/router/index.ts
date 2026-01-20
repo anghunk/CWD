@@ -3,6 +3,7 @@ import LoginView from '../views/LoginView.vue';
 import LayoutView from '../views/LayoutView.vue';
 import CommentsView from '../views/CommentsView.vue';
 import SettingsView from '../views/SettingsView.vue';
+import DataView from '../views/DataView.vue';
 
 const routes: RouteRecordRaw[] = [
 	{
@@ -27,6 +28,11 @@ const routes: RouteRecordRaw[] = [
 				path: 'settings',
 				name: 'settings',
 				component: SettingsView
+			},
+			{
+				path: 'data',
+				name: 'data',
+				component: DataView
 			}
 		]
 	}

@@ -32,6 +32,13 @@
           </li>
           <li
             class="menu-item"
+            :class="{ active: isRouteActive('data') }"
+            @click="goData"
+          >
+            数据管理
+          </li>
+          <li
+            class="menu-item"
             :class="{ active: isRouteActive('settings') }"
             @click="goSettings"
           >
@@ -59,6 +66,10 @@ function isRouteActive(name: string) {
 
 function goComments() {
   router.push({ name: "comments" });
+}
+
+function goData() {
+  router.push({ name: "data" });
 }
 
 function goSettings() {
