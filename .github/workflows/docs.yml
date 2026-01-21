@@ -27,7 +27,6 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: docs/package-lock.json
 
       - name: Install dependencies
         working-directory: docs
@@ -52,4 +51,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
