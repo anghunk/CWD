@@ -97,7 +97,7 @@ export type VisitPageItem = {
 	postTitle: string | null;
 	postUrl: string | null;
 	pv: number;
-	lastVisitAt: string | null;
+	lastVisitAt: number | null;
 };
 
 export type VisitPagesResponse = {

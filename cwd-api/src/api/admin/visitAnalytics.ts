@@ -45,7 +45,7 @@ export const getVisitOverview = async (
 		const domainFilter = rawDomain.trim().toLowerCase();
 
 		await c.env.CWD_DB.prepare(
-			'CREATE TABLE IF NOT EXISTS page_stats (id INTEGER PRIMARY KEY AUTOINCREMENT, post_slug TEXT UNIQUE NOT NULL, post_title TEXT, post_url TEXT, pv INTEGER NOT NULL DEFAULT 0, last_visit_at TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)'
+			'CREATE TABLE IF NOT EXISTS page_stats (id INTEGER PRIMARY KEY AUTOINCREMENT, post_slug TEXT UNIQUE NOT NULL, post_title TEXT, post_url TEXT, pv INTEGER NOT NULL DEFAULT 0, last_visit_at INTEGER, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)'
 		).run();
 
 		await c.env.CWD_DB.prepare(
@@ -59,7 +59,7 @@ export const getVisitOverview = async (
 			post_title: string | null;
 			post_url: string | null;
 			pv: number;
-			last_visit_at: string | null;
+			last_visit_at: number | null;
 		}>();
 
 		let totalPv = 0;
@@ -150,7 +150,7 @@ export const getVisitPages = async (c: Context<{ Bindings: Bindings }>) => {
 		const domainFilter = rawDomain.trim().toLowerCase();
 
 		await c.env.CWD_DB.prepare(
-			'CREATE TABLE IF NOT EXISTS page_stats (id INTEGER PRIMARY KEY AUTOINCREMENT, post_slug TEXT UNIQUE NOT NULL, post_title TEXT, post_url TEXT, pv INTEGER NOT NULL DEFAULT 0, last_visit_at TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)'
+			'CREATE TABLE IF NOT EXISTS page_stats (id INTEGER PRIMARY KEY AUTOINCREMENT, post_slug TEXT UNIQUE NOT NULL, post_title TEXT, post_url TEXT, pv INTEGER NOT NULL DEFAULT 0, last_visit_at INTEGER, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)'
 		).run();
 
 		const { results } = await c.env.CWD_DB.prepare(
@@ -160,7 +160,7 @@ export const getVisitPages = async (c: Context<{ Bindings: Bindings }>) => {
 			post_title: string | null;
 			post_url: string | null;
 			pv: number;
-			last_visit_at: string | null;
+			last_visit_at: number | null;
 		}>();
 
 		const items: VisitPageItem[] = [];

@@ -39,7 +39,7 @@ export const trackVisit = async (c: Context<{ Bindings: Bindings }>) => {
 		}
 
 		await c.env.CWD_DB.prepare(
-			'CREATE TABLE IF NOT EXISTS page_stats (id INTEGER PRIMARY KEY AUTOINCREMENT, post_slug TEXT UNIQUE NOT NULL, post_title TEXT, post_url TEXT, pv INTEGER NOT NULL DEFAULT 0, last_visit_at TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)'
+			'CREATE TABLE IF NOT EXISTS page_stats (id INTEGER PRIMARY KEY AUTOINCREMENT, post_slug TEXT UNIQUE NOT NULL, post_title TEXT, post_url TEXT, pv INTEGER NOT NULL DEFAULT 0, last_visit_at INTEGER, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)'
 		).run();
 
 		await c.env.CWD_DB.prepare(
@@ -47,6 +47,7 @@ export const trackVisit = async (c: Context<{ Bindings: Bindings }>) => {
 		).run();
 
 		const nowDate = new Date();
+		const nowTs = nowDate.getTime();
 		const nowIso = nowDate.toISOString();
 		const today = nowIso.slice(0, 10);
 
@@ -70,9 +71,9 @@ export const trackVisit = async (c: Context<{ Bindings: Bindings }>) => {
 					rawPostTitle || null,
 					rawPostUrl || null,
 					1,
-					nowIso,
-					nowIso,
-					nowIso
+					nowTs,
+					nowTs,
+					nowTs
 				)
 				.run();
 		} else {
@@ -84,8 +85,8 @@ export const trackVisit = async (c: Context<{ Bindings: Bindings }>) => {
 					rawPostTitle || null,
 					rawPostUrl || null,
 					newPv,
-					nowIso,
-					nowIso,
+					nowTs,
+					nowTs,
 					existing.id
 				)
 				.run();

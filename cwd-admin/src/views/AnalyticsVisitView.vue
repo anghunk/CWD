@@ -127,13 +127,27 @@ function showToast(msg: string, type: "success" | "error" = "success") {
   }, 2000);
 }
 
-function formatTime(value: string | null): string {
+function formatTime(value: string | number | null | undefined): string {
   if (!value) {
     return "-";
   }
-  const date = new Date(value);
+  let date: Date;
+  if (typeof value === "number") {
+    date = new Date(value);
+  } else {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return "-";
+    }
+    if (/^\d+$/.test(trimmed)) {
+      const ts = Number(trimmed);
+      date = new Date(ts);
+    } else {
+      date = new Date(trimmed);
+    }
+  }
   if (Number.isNaN(date.getTime())) {
-    return value;
+    return "-";
   }
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
