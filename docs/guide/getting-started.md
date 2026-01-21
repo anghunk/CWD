@@ -15,8 +15,9 @@ CWD 评论系统。
 ![](https://github.com/user-attachments/assets/6ac091d8-e349-4d40-9d68-485817f63236)
 
 **后台管理**
-![](https://github.com/user-attachments/assets/6c3586d8-a111-4c35-a099-91d670b9c04b)
 ![](https://github.com/user-attachments/assets/d2cd1d4d-f592-4ff5-9915-7ed0e2a0304b)
+![](https://github.com/user-attachments/assets/6c3586d8-a111-4c35-a099-91d670b9c04b)
+![](https://github.com/user-attachments/assets/97f35f06-a346-40ed-8ed4-24a9457bee33)
 
 ## 特性
 
