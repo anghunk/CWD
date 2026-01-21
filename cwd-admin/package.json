@@ -8,7 +8,7 @@
     "preview": "vite preview",
     "build:admin": "vite build",
     "build:widget": "cd widget && npm install && npm run build",
-    "build": "npm run build:admin && node copy-cwd-to-public.js && npm run build:widget"
+    "build": "npm run build:widget && node copy-cwd-to-public.js && npm run build:admin"
   },
   "dependencies": {
     "vue": "^3.5.13",
