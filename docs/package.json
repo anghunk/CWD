@@ -1,6 +1,5 @@
 {
   "name": "docs",
-  "version": "0.0.1",
   "description": "CWD 评论系统文档",
   "type": "module",
   "scripts": {
