@@ -82,27 +82,15 @@
           </div>
           <div class="table-cell table-cell-actions">
             <div class="table-actions">
-              <button
-                class="table-action"
-                @click="changeStatus(item, 'approved')"
-                :disabled="item.status === 'approved'"
+              <select
+                class="status-select"
+                :value="item.status"
+                @change="handleStatusChange(item, $event)"
               >
-                通过
-              </button>
-              <button
-                class="table-action"
-                @click="changeStatus(item, 'pending')"
-                :disabled="item.status === 'pending'"
-              >
-                待审
-              </button>
-              <button
-                class="table-action"
-                @click="changeStatus(item, 'rejected')"
-                :disabled="item.status === 'rejected'"
-              >
-                拒绝
-              </button>
+                <option value="approved">通过</option>
+                <option value="pending">待审</option>
+                <option value="rejected">拒绝</option>
+              </select>
               <button class="table-action" @click="openEdit(item)">编辑</button>
               <button
                 class="table-action table-action-danger"
@@ -205,6 +193,10 @@
             <input v-model="editForm.url" class="form-input" type="text" />
           </div>
           <div class="form-item">
+            <label class="form-label">评论地址</label>
+            <input v-model="editForm.postSlug" class="form-input" type="text" />
+          </div>
+          <div class="form-item">
             <label class="form-label">评论内容</label>
             <textarea
               v-model="editForm.contentText"
@@ -272,6 +264,7 @@ const editForm = ref<{
   name: string;
   email: string;
   url: string;
+  postSlug: string;
   contentText: string;
   status: string;
 } | null>(null);
@@ -390,6 +383,15 @@ async function changeStatus(item: CommentItem, status: string) {
   }
 }
 
+function handleStatusChange(item: CommentItem, event: Event) {
+  const target = event.target as HTMLSelectElement;
+  const status = target.value;
+  if (!status || status === item.status) {
+    return;
+  }
+  changeStatus(item, status);
+}
+
 async function removeComment(item: CommentItem) {
   if (!window.confirm(`确认删除评论 ${item.id} 吗`)) {
     return;
@@ -438,6 +440,7 @@ function openEdit(item: CommentItem) {
     name: item.name,
     email: item.email,
     url: item.url || "",
+    postSlug: item.postSlug || "",
     contentText: item.contentText,
     status: item.status,
   };
@@ -457,7 +460,15 @@ async function submitEdit() {
     return;
   }
   const current = editForm.value;
-  if (!current.name.trim() || !current.email.trim() || !current.contentText.trim()) {
+  const trimmedName = current.name.trim();
+  const trimmedEmail = current.email.trim();
+  const trimmedContent = current.contentText.trim();
+  const trimmedUrl = current.url.trim();
+  const trimmedPostSlug = current.postSlug.trim();
+  const commentIndex = comments.value.findIndex((c) => c.id === current.id);
+  const existingComment = commentIndex !== -1 ? comments.value[commentIndex] : null;
+  const newPostSlug = trimmedPostSlug || existingComment?.postSlug || "";
+  if (!trimmedName || !trimmedEmail || !trimmedContent) {
     error.value = "昵称、邮箱和内容不能为空";
     return;
   }
@@ -466,20 +477,21 @@ async function submitEdit() {
   try {
     await updateComment({
       id: current.id,
-      name: current.name.trim(),
-      email: current.email.trim(),
-      url: current.url.trim() || null,
-      contentText: current.contentText,
+      name: trimmedName,
+      email: trimmedEmail,
+      url: trimmedUrl || null,
+      postSlug: newPostSlug,
+      contentText: trimmedContent,
       status: current.status,
     });
-    const index = comments.value.findIndex((c) => c.id === current.id);
-    if (index !== -1) {
-      comments.value[index] = {
-        ...comments.value[index],
-        name: current.name.trim(),
-        email: current.email.trim(),
-        url: current.url.trim() || null,
-        contentText: current.contentText,
+    if (commentIndex !== -1) {
+      comments.value[commentIndex] = {
+        ...comments.value[commentIndex],
+        name: trimmedName,
+        email: trimmedEmail,
+        url: trimmedUrl || null,
+        postSlug: newPostSlug,
+        contentText: trimmedContent,
         status: current.status,
       };
     }
@@ -707,7 +719,7 @@ onMounted(() => {
 }
 
 .cell-path {
-  font-size: 12px;
+  font-size: 13px;
   color: #2774cb;
   white-space: nowrap;
   overflow: hidden;
@@ -764,6 +776,14 @@ onMounted(() => {
   background-color: #ffebe9;
 }
 
+.status-select {
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid #d0d7de;
+  font-size: 13px;
+  cursor: pointer;
+}
+
 .table-actions {
   display: flex;
   gap: 4px;
@@ -775,7 +795,7 @@ onMounted(() => {
   border-radius: 4px;
   border: 1px solid #d0d7de;
   background-color: #ffffff;
-  font-size: 12px;
+  font-size: 13px;
   cursor: pointer;
 }
 

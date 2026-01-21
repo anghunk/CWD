@@ -115,6 +115,7 @@ export function updateComment(data: {
 	name: string;
 	email: string;
 	url?: string | null;
+	postSlug?: string;
 	contentText: string;
 	status?: string;
 }): Promise<{ message: string }> {
@@ -123,6 +124,7 @@ export function updateComment(data: {
 		name: data.name,
 		email: data.email,
 		url: data.url ?? null,
+		postSlug: data.postSlug,
 		content: data.contentText,
 		status: data.status
 	});

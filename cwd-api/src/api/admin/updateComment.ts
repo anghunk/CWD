@@ -25,10 +25,10 @@ export const updateComment = async (c: Context<{ Bindings: Bindings }>) => {
   }
 
   const existing = await c.env.CWD_DB.prepare(
-    'SELECT id, status FROM Comment WHERE id = ?'
+    'SELECT id, status, post_slug FROM Comment WHERE id = ?'
   )
     .bind(id)
-    .first<{ id: number; status: string }>();
+    .first<{ id: number; status: string; post_slug: string }>();
 
   if (!existing) {
     return c.json({ message: 'Comment not found' }, 404);
@@ -38,6 +38,15 @@ export const updateComment = async (c: Context<{ Bindings: Bindings }>) => {
   const rawEmail = typeof body.email === 'string' ? body.email : '';
   const rawUrl = typeof body.url === 'string' ? body.url : '';
   const rawStatus = typeof body.status === 'string' ? body.status : existing.status;
+  const hasPostSlugField =
+    Object.prototype.hasOwnProperty.call(body, 'postSlug') ||
+    Object.prototype.hasOwnProperty.call(body, 'post_slug');
+  const rawPostSlug =
+    typeof body.postSlug === 'string'
+      ? body.postSlug
+      : typeof body.post_slug === 'string'
+      ? body.post_slug
+      : '';
 
   const contentSource =
     typeof body.content === 'string'
@@ -50,6 +59,9 @@ export const updateComment = async (c: Context<{ Bindings: Bindings }>) => {
   const email = rawEmail.trim();
   const url = rawUrl.trim() || null;
   const status = rawStatus.trim();
+  const postSlug = hasPostSlugField
+    ? (rawPostSlug.trim() || existing.post_slug)
+    : existing.post_slug;
 
   if (!name) {
     return c.json({ message: '昵称不能为空' }, 400);
@@ -78,9 +90,9 @@ export const updateComment = async (c: Context<{ Bindings: Bindings }>) => {
   });
 
   const { success } = await c.env.CWD_DB.prepare(
-    'UPDATE Comment SET name = ?, email = ?, url = ?, content_text = ?, content_html = ?, status = ? WHERE id = ?'
+    'UPDATE Comment SET name = ?, email = ?, url = ?, content_text = ?, content_html = ?, status = ?, post_slug = ? WHERE id = ?'
   )
-    .bind(name, email, url, contentText, contentHtml, status, id)
+    .bind(name, email, url, contentText, contentHtml, status, postSlug, id)
     .run();
 
   if (!success) {
