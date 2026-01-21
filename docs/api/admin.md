@@ -107,13 +107,15 @@ GET /admin/comments/list
 
 **查询参数**
 
-| 名称   | 位置  | 类型    | 必填 | 说明           |
-| ------ | ----- | ------- | ---- | -------------- |
-| `page` | query | integer | 否   | 页码，默认 `1` |
+| 名称     | 位置  | 类型    | 必填 | 说明                                       |
+| -------- | ----- | ------- | ---- | ------------------------------------------ |
+| `page`   | query | integer | 否   | 页码，默认 `1`                             |
+| `domain` | query | string  | 否   | 按域名筛选评论，传入域名，如 `example.com` |
 
 说明：
 
-- 当前实现中每页固定大小为 `10`，暂不支持 `pageSize` 或状态过滤。
+- 当前实现中每页固定大小为 `10`，暂不支持 `pageSize` 或状态过滤；
+- 当提供 `domain` 参数时，会匹配该域名下的评论，例如 `https://example.com/...`、`http://example.com/...`。
 
 **成功响应**
 
@@ -124,15 +126,16 @@ GET /admin/comments/list
 	"data": [
 		{
 			"id": 1,
-			"pubDate": "2026-01-13T10:00:00Z",
-			"author": "张三",
+			"created": 1736762400000,
+			"name": "张三",
 			"email": "zhangsan@example.com",
-			"postSlug": "/blog/hello-world",
+			"postSlug": "https://your-blog.example.com/blog/hello-world",
 			"url": "https://zhangsan.me",
 			"ipAddress": "127.0.0.1",
 			"contentText": "很棒的文章！",
 			"contentHtml": "很棒的文章！",
 			"status": "approved",
+			"ua": "Mozilla/5.0 ...",
 			"avatar": "https://gravatar.com/avatar/..."
 		}
 	],
@@ -487,22 +490,26 @@ GET /admin/settings/comments
 	"allowedDomains": [],
 	"adminKey": "your-admin-key",
 	"adminKeySet": true,
-  "requireReview": false
+	"requireReview": false,
+	"blockedIps": ["1.1.1.1", "2.2.2.2"],
+	"blockedEmails": ["spam@example.com", "bot@test.com"]
 }
 ```
 
 字段说明（相比公开接口 `/api/config/comments` 增加了管理员密钥相关字段）：
 
-| 字段名         | 类型    | 说明                                                     |
-| -------------- | ------- | -------------------------------------------------------- |
-| `adminEmail`   | string  | 博主邮箱地址，用于显示“博主”标识以及管理员身份验证     |
-| `adminBadge`   | string  | 博主标识文字，例如 `"博主"`                              |
-| `avatarPrefix` | string  | 头像地址前缀，如 Gravatar 或 Cravatar 镜像地址          |
-| `adminEnabled` | boolean | 是否启用博主标识相关展示                                 |
-| `allowedDomains` | Array\<string\> | 允许调用组件的域名列表，留空则不限制           |
-| `adminKey`     | string\|null | 管理员评论密钥（明文），仅通过管理后台接口返回 |
-| `adminKeySet`  | boolean | 是否已经设置过管理员评论密钥                            |
-| `requireReview` | boolean | 是否开启新评论先审核再显示（true 表示新评论默认为待审核） |
+| 字段名           | 类型            | 说明                                                      |
+| ---------------- | --------------- | --------------------------------------------------------- |
+| `adminEmail`     | string          | 博主邮箱地址，用于显示“博主”标识以及管理员身份验证        |
+| `adminBadge`     | string          | 博主标识文字，例如 `"博主"`                               |
+| `avatarPrefix`   | string          | 头像地址前缀，如 Gravatar 或 Cravatar 镜像地址            |
+| `adminEnabled`   | boolean         | 是否启用博主标识相关展示                                  |
+| `allowedDomains` | Array\<string\> | 允许调用组件的域名列表，留空则不限制                      |
+| `adminKey`       | string\|null    | 管理员评论密钥（明文），仅通过管理后台接口返回            |
+| `adminKeySet`    | boolean         | 是否已经设置过管理员评论密钥                              |
+| `requireReview`  | boolean         | 是否开启新评论先审核再显示（true 表示新评论默认为待审核） |
+| `blockedIps`     | Array\<string\> | IP 黑名单列表，匹配到的 IP 提交评论将被拒绝               |
+| `blockedEmails`  | Array\<string\> | 邮箱黑名单列表，匹配到的邮箱提交评论将被拒绝              |
 
 **错误响应**
 
@@ -542,21 +549,25 @@ PUT /admin/settings/comments
 	"adminEnabled": true,
 	"allowedDomains": [],
 	"adminKey": "your-admin-key",
-  "requireReview": false
+	"requireReview": false,
+	"blockedIps": ["1.1.1.1", "2.2.2.2"],
+	"blockedEmails": ["spam@example.com", "bot@test.com"]
 }
 ```
 
 字段说明：
 
-| 字段名           | 类型    | 必填 | 说明                                                                 |
-| ---------------- | ------- | ---- | -------------------------------------------------------------------- |
-| `adminEmail`     | string  | 否   | 博主邮箱地址，需为合法邮箱                                           |
-| `adminBadge`     | string  | 否   | 博主标识文字，例如 `"博主"`                                          |
-| `avatarPrefix`   | string  | 否   | 头像地址前缀，如 Gravatar 或 Cravatar 镜像地址                       |
-| `adminEnabled`   | boolean | 否   | 是否启用博主标识相关展示                                             |
-| `allowedDomains` | Array   | 否   | 允许前端调用组件的域名列表                                           |
+| 字段名           | 类型    | 必填 | 说明                                                               |
+| ---------------- | ------- | ---- | ------------------------------------------------------------------ |
+| `adminEmail`     | string  | 否   | 博主邮箱地址，需为合法邮箱                                         |
+| `adminBadge`     | string  | 否   | 博主标识文字，例如 `"博主"`                                        |
+| `avatarPrefix`   | string  | 否   | 头像地址前缀，如 Gravatar 或 Cravatar 镜像地址                     |
+| `adminEnabled`   | boolean | 否   | 是否启用博主标识相关展示                                           |
+| `allowedDomains` | Array   | 否   | 允许前端调用组件的域名列表                                         |
 | `adminKey`       | string  | 否   | 管理员评论密钥，留空则表示清除密钥；设置后前台管理员评论需输入密钥 |
-| `requireReview`  | boolean | 否   | 是否开启新评论先审核再显示（不传则保持不变）                         |
+| `requireReview`  | boolean | 否   | 是否开启新评论先审核再显示（不传则保持不变）                       |
+| `blockedIps`     | Array   | 否   | IP 黑名单列表，多个 IP 用逗号或换行分隔                            |
+| `blockedEmails`  | Array   | 否   | 邮箱黑名单列表，多个邮箱用逗号或换行分隔                           |
 
 **成功响应**
 
@@ -587,3 +598,218 @@ PUT /admin/settings/comments
   	"message": "保存失败"
   }
   ```
+
+## 将指定 IP 加入评论黑名单
+
+```
+POST /admin/comments/block-ip
+```
+
+通过接口将指定 IP 地址加入评论黑名单，后续该 IP 提交评论将被拒绝。
+
+- 方法：`POST`
+- 路径：`/admin/comments/block-ip`
+- 鉴权：需要（Bearer Token）
+
+**请求头**
+
+| 名称           | 必填 | 示例               |
+| -------------- | ---- | ------------------ |
+| `Content-Type` | 是   | `application/json` |
+
+**请求体**
+
+```json
+{
+	"ip": "1.1.1.1"
+}
+```
+
+字段说明：
+
+| 字段名 | 类型   | 必填 | 说明                                             |
+| ------ | ------ | ---- | ------------------------------------------------ |
+| `ip`   | string | 是   | 要加入黑名单的 IP 地址，多个 IP 用逗号或换行分隔 |
+
+**成功响应**
+
+- 状态码：`200`
+
+```json
+{
+	"message": "已加入 IP 黑名单"
+}
+```
+
+**错误响应**
+
+- IP 为空：
+  - 状态码：`400`
+
+  ```json
+  {
+  	"message": "IP 地址不能为空"
+  }
+  ```
+
+- 内部错误：
+  - 状态码：`500`
+
+  ```json
+  {
+  	"message": "操作失败"
+  }
+  ```
+
+## 将指定邮箱加入评论黑名单
+
+```
+POST /admin/comments/block-email
+```
+
+通过接口将指定邮箱地址加入评论黑名单，后续该邮箱提交评论将被拒绝。
+
+- 方法：`POST`
+- 路径：`/admin/comments/block-email`
+- 鉴权：需要（Bearer Token）
+
+**请求头**
+
+| 名称           | 必填 | 示例               |
+| -------------- | ---- | ------------------ |
+| `Content-Type` | 是   | `application/json` |
+
+**请求体**
+
+```json
+{
+	"email": "spam@example.com"
+}
+```
+
+字段说明：
+
+| 字段名  | 类型   | 必填 | 说明                                             |
+| ------- | ------ | ---- | ------------------------------------------------ |
+| `email` | string | 是   | 要加入黑名单的邮箱地址，多个邮箱用逗号或换行分隔 |
+
+**成功响应**
+
+- 状态码：`200`
+
+```json
+{
+	"message": "已加入邮箱黑名单"
+}
+```
+
+**错误响应**
+
+- 邮箱为空：
+  - 状态码：`400`
+
+  ```json
+  {
+  	"message": "邮箱不能为空"
+  }
+  ```
+
+- 邮箱格式不正确：
+  - 状态码：`400`
+
+  ```json
+  {
+  	"message": "邮箱格式不正确"
+  }
+  ```
+
+- 内部错误：
+  - 状态码：`500`
+
+  ```json
+  {
+  	"message": "操作失败"
+  }
+  ```
+
+## 获取评论统计数据（数据看板）
+
+```
+GET /admin/stats/comments
+```
+
+用于管理后台「数据看板」展示评论整体统计、按域名统计以及最近 7 天评论趋势。
+
+- 方法：`GET`
+- 路径：`/admin/stats/comments`
+- 鉴权：需要（Bearer Token）
+
+**成功响应**
+
+- 状态码：`200`
+
+```json
+{
+	"summary": {
+		"total": 123,
+		"approved": 100,
+		"pending": 20,
+		"rejected": 3
+	},
+	"domains": [
+		{
+			"domain": "example.com",
+			"total": 80,
+			"approved": 70,
+			"pending": 8,
+			"rejected": 2
+		},
+		{
+			"domain": "blog.example.com",
+			"total": 30,
+			"approved": 20,
+			"pending": 9,
+			"rejected": 1
+		}
+	],
+	"last7Days": [
+		{
+			"date": "2026-01-15",
+			"total": 10
+		},
+		{
+			"date": "2026-01-16",
+			"total": 12
+		}
+	]
+}
+```
+
+字段说明：
+
+| 字段名               | 类型                | 说明                                  |
+| -------------------- | ------------------- | ------------------------------------- |
+| `summary`            | object              | 评论整体汇总统计                      |
+| `summary.total`      | number              | 评论总数                              |
+| `summary.approved`   | number              | 已通过评论数                          |
+| `summary.pending`    | number              | 待审核评论数                          |
+| `summary.rejected`   | number              | 已拒绝评论数                          |
+| `domains`            | Array\<DomainStat\> | 按域名聚合的评论统计列表              |
+| `domains[].domain`   | string              | 解析后的域名（如 `example.com`）      |
+| `domains[].total`    | number              | 该域名下评论总数                      |
+| `domains[].approved` | number              | 该域名下已通过评论数                  |
+| `domains[].pending`  | number              | 该域名下待审核评论数                  |
+| `domains[].rejected` | number              | 该域名下已拒绝评论数                  |
+| `last7Days`          | Array\<DailyStat\>  | 最近 7 天的每日评论数（按自然日聚合） |
+| `last7Days[].date`   | string (YYYY-MM-DD) | 日期，UTC 时间格式化后的自然日        |
+| `last7Days[].total`  | number              | 当日评论总数                          |
+
+**错误响应**
+
+- 状态码：`500`
+
+```json
+{
+	"message": "获取统计数据失败"
+}
+```

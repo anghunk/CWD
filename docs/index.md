@@ -37,5 +37,5 @@ features:
 ---
 
 <style>
-#comments{max-width:1150px;margin:2em auto 0;}
+.extra-class{max-width:1200px;margin:2em auto 0;padding:0 24px;}
 </style>
