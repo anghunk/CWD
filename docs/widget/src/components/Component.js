@@ -134,7 +134,7 @@ export class Component {
     if (options.children) {
       const children = Array.isArray(options.children) ? options.children : [options.children];
       children.forEach(child => {
-        if (child instanceof HTMLElement) {
+        if (child instanceof Node) {
           el.appendChild(child);
         }
       });

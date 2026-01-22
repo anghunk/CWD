@@ -105,26 +105,47 @@ export class CommentItem extends Component {
                       },
                       text: '回复'
                     }),
-                    this.createElement('span', {
+                    this.createElement('div', {
                       className: 'cwd-comment-like',
                       children: [
                         this.createElement('button', {
                           className: 'cwd-comment-like-button',
                           attributes: {
                             type: 'button',
+                            'aria-label': '点赞',
                             onClick: () => this.handleLikeComment()
                           },
-                          text: '赞'
-                        }),
-                        this.createTextElement(
-                          'span',
-                          String(
-                            typeof comment.likes === 'number' && Number.isFinite(comment.likes) && comment.likes >= 0
-                              ? comment.likes
-                              : 0
-                          ),
-                          'cwd-comment-like-count'
-                        )
+                          children: [
+                            this.createElement('span', {
+                              className: 'cwd-comment-like-icon-wrapper',
+                              children: [
+                                this.createElement('svg', {
+                                  className: 'cwd-comment-like-icon',
+                                  attributes: {
+                                    viewBox: '0 0 24 24',
+                                    'aria-hidden': 'true'
+                                  },
+                                  children: [
+                                    this.createElement('path', {
+                                      attributes: {
+                                        d: 'M12 21c-.4 0-.8-.1-1.1-.4L4.5 15C3 13.6 2 11.7 2 9.6 2 6.5 4.5 4 7.6 4c1.7 0 3.3.8 4.4 2.1C13.1 4.8 14.7 4 16.4 4 19.5 4 22 6.5 22 9.6c0 2.1-1 4-2.5 5.4l-6.4 5.6c-.3.3-.7.4-1.1.4z'
+                                      }
+                                    })
+                                  ]
+                                })
+                              ]
+                            }),
+                            this.createTextElement(
+                              'span',
+                              String(
+                                typeof comment.likes === 'number' && Number.isFinite(comment.likes) && comment.likes >= 0
+                                  ? comment.likes
+                                  : 0
+                              ),
+                              'cwd-comment-like-count'
+                            )
+                          ]
+                        })
                       ]
                     }),
                     this.createTextElement('span', formatRelativeTime(comment.created), 'cwd-comment-time')
