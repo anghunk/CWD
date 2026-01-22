@@ -35,6 +35,20 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown): Pro
 	}
 	if (!res.ok) {
 		const message = data && data.message ? data.message : `请求失败，状态码 ${res.status}`;
+		if (res.status === 401 && (message === 'Token expired or invalid' || message === 'Unauthorized')) {
+			localStorage.removeItem('cwd_admin_token');
+			if (typeof window !== 'undefined') {
+				try {
+					const url = new URL(window.location.href);
+					url.pathname = '/login';
+					url.search = '';
+					url.hash = '';
+					window.location.href = url.toString();
+				} catch {
+					window.location.href = '/login';
+				}
+			}
+		}
 		throw new Error(message);
 	}
 	return data as T;
