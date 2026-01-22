@@ -1160,3 +1160,134 @@ GET /admin/stats/comments
 	"message": "获取统计数据失败"
 }
 ```
+
+## 7. 访问统计相关
+
+### 7.1 获取访问统计概览
+
+```
+GET /admin/analytics/overview
+```
+
+用于管理后台「访问统计」页面展示整体访问数据，包括总 PV、总页面数以及最近 30 天的访问趋势。
+
+- 方法：`GET`
+- 路径：`/admin/analytics/overview`
+- 鉴权：需要（Bearer Token）
+
+**查询参数**
+
+| 名称     | 位置  | 类型   | 必填 | 说明                                       |
+| -------- | ----- | ------ | ---- | ------------------------------------------ |
+| `domain` | query | string | 否   | 按域名筛选访问数据，传入域名，如 `example.com` |
+
+**成功响应**
+
+- 状态码：`200`
+
+```json
+{
+  "totalPv": 1000,
+  "totalPages": 50,
+  "last30Days": [
+    {
+      "date": "2026-01-15",
+      "total": 20
+    },
+    {
+      "date": "2026-01-16",
+      "total": 25
+    }
+  ]
+}
+```
+
+字段说明：
+
+| 字段名         | 类型                | 说明                                  |
+| -------------- | ------------------- | ------------------------------------- |
+| `totalPv`      | number              | 总访问量（PV）                        |
+| `totalPages`   | number              | 总页面数                              |
+| `last30Days`   | Array\<DailyStat\>  | 最近 30 天的每日访问数（按自然日聚合） |
+| `last30Days[].date`   | string (YYYY-MM-DD) | 日期，UTC 时间格式化后的自然日        |
+| `last30Days[].total`  | number              | 当日访问总数                          |
+
+**错误响应**
+
+- 状态码：`500`
+
+```json
+{
+  "message": "获取访问统计概览失败"
+}
+```
+
+### 7.2 获取页面访问统计
+
+```
+GET /admin/analytics/pages
+```
+
+用于管理后台「访问统计」页面展示各个页面的访问明细，支持按 PV 排序或最新访问排序。
+
+- 方法：`GET`
+- 路径：`/admin/analytics/pages`
+- 鉴权：需要（Bearer Token）
+
+**查询参数**
+
+| 名称     | 位置  | 类型   | 必填 | 说明                                       |
+| -------- | ----- | ------ | ---- | ------------------------------------------ |
+| `domain` | query | string | 否   | 按域名筛选访问数据，传入域名，如 `example.com` |
+| `order`  | query | string | 否   | 排序方式，`pv`（按访问量排序，默认）或 `latest`（最新访问） |
+
+说明：
+
+- 当前实现中固定返回前 20 条数据
+- `order=pv`：按访问量降序排序，访问量相同时按最后访问时间降序排序
+- `order=latest`：按最后访问时间降序排序，访问时间相同时按访问量降序排序
+
+**成功响应**
+
+- 状态码：`200`
+
+```json
+{
+  "items": [
+    {
+      "postSlug": "https://example.com/blog/hello-world",
+      "postTitle": "Hello World",
+      "postUrl": "https://example.com/blog/hello-world",
+      "pv": 100,
+      "lastVisitAt": 1737593600000
+    },
+    {
+      "postSlug": "https://example.com/about",
+      "postTitle": "关于我",
+      "postUrl": "https://example.com/about",
+      "pv": 50,
+      "lastVisitAt": 1737593500000
+    }
+  ]
+}
+```
+
+字段说明：
+
+| 字段名        | 类型   | 说明                       |
+| ------------- | ------ | -------------------------- |
+| `postSlug`    | string | 文章唯一标识符            |
+| `postTitle`   | string \| null | 文章标题           |
+| `postUrl`     | string \| null | 文章 URL          |
+| `pv`          | number | 访问量（PV）              |
+| `lastVisitAt` | number \| null | 最后访问时间戳（毫秒） |
+
+**错误响应**
+
+- 状态码：`500`
+
+```json
+{
+  "message": "获取页面访问统计失败"
+}
+```

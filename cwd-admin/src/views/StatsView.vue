@@ -224,7 +224,7 @@ function renderChart() {
           color: "#0ea5e9",
         },
         symbol: "circle",
-        symbolSize: 6,
+        symbolSize: 3,
       },
     ],
   };

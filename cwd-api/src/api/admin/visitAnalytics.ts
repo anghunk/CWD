@@ -4,6 +4,9 @@ import type { Bindings } from '../../bindings';
 type VisitOverview = {
 	totalPv: number;
 	totalPages: number;
+	todayPv: number;
+	weekPv: number;
+	monthPv: number;
 	last30Days: {
 		date: string;
 		total: number;
@@ -81,11 +84,31 @@ export const getVisitOverview = async (
 
 		const now = new Date();
 		const thirtyDaysAgo = new Date(now.getTime() - 29 * 24 * 60 * 60 * 1000);
-		const startDate = thirtyDaysAgo.toISOString().slice(0, 10);
+
+		const year = now.getUTCFullYear();
+		const month = now.getUTCMonth();
+		const day = now.getUTCDate();
+
+		const toKey = (d: Date) => {
+			const y = d.getUTCFullYear();
+			const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+			const dd = String(d.getUTCDate()).padStart(2, '0');
+			return `${y}-${m}-${dd}`;
+		};
+
+		const startDate30 = toKey(thirtyDaysAgo);
+
+		const monthStartDate = new Date(Date.UTC(year, month, 1));
+		const monthStartKey = toKey(monthStartDate);
+
+		let earliestDate = startDate30;
+		if (monthStartKey < earliestDate) {
+			earliestDate = monthStartKey;
+		}
 
 		let dailySql =
 			'SELECT date, domain, count FROM page_visit_daily WHERE date >= ?';
-		const params: string[] = [startDate];
+		const params: string[] = [earliestDate];
 
 		if (domainFilter) {
 			dailySql += ' AND domain = ?';
@@ -116,13 +139,52 @@ export const getVisitOverview = async (
 			dailyMap.set(fallbackDate, totalPv);
 		}
 
+		const todayKey = toKey(now);
+
+		const weekStartDate = (() => {
+			const d = new Date(Date.UTC(year, month, day));
+			const weekday = d.getUTCDay();
+			const offset = (weekday + 6) % 7;
+			return new Date(d.getTime() - offset * 24 * 60 * 60 * 1000);
+		})();
+		const weekStartKey = toKey(weekStartDate);
+
+		let todayPv = dailyMap.get(todayKey) || 0;
+		let weekPv = 0;
+		let monthPv = 0;
+
+		{
+			let cursor = new Date(weekStartDate.getTime());
+			while (cursor.getTime() <= now.getTime()) {
+				const key = toKey(cursor);
+				weekPv += dailyMap.get(key) || 0;
+				cursor = new Date(cursor.getTime() - 0 + 24 * 60 * 60 * 1000);
+			}
+		}
+
+		{
+			let cursor = new Date(monthStartDate.getTime());
+			while (cursor.getTime() <= now.getTime()) {
+				const key = toKey(cursor);
+				monthPv += dailyMap.get(key) || 0;
+				cursor = new Date(cursor.getTime() + 24 * 60 * 60 * 1000);
+			}
+		}
+
+		if (todayPv > totalPv) {
+			todayPv = totalPv;
+		}
+		if (weekPv > totalPv) {
+			weekPv = totalPv;
+		}
+		if (monthPv > totalPv) {
+			monthPv = totalPv;
+		}
+
 		const last30Days: { date: string; total: number }[] = [];
 		for (let i = 29; i >= 0; i--) {
 			const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-			const year = d.getUTCFullYear();
-			const month = String(d.getUTCMonth() + 1).padStart(2, '0');
-			const day = String(d.getUTCDate()).padStart(2, '0');
-			const key = `${year}-${month}-${day}`;
+			const key = toKey(d);
 			last30Days.push({
 				date: key,
 				total: dailyMap.get(key) || 0
@@ -132,6 +194,9 @@ export const getVisitOverview = async (
 		const data: VisitOverview = {
 			totalPv,
 			totalPages,
+			todayPv,
+			weekPv,
+			monthPv,
 			last30Days
 		};
 

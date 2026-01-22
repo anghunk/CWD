@@ -86,6 +86,9 @@ export type CommentStatsResponse = {
 export type VisitOverviewResponse = {
 	totalPv: number;
 	totalPages: number;
+	todayPv: number;
+	weekPv: number;
+	monthPv: number;
 	last30Days?: {
 		date: string;
 		total: number;

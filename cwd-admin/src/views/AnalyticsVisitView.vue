@@ -32,6 +32,18 @@
             <div class="stats-value">{{ overview.totalPv }}</div>
           </div>
           <div class="stats-item">
+            <div class="stats-label">今日访问量</div>
+            <div class="stats-value">{{ overview.todayPv }}</div>
+          </div>
+          <div class="stats-item">
+            <div class="stats-label">本周访问量</div>
+            <div class="stats-value">{{ overview.weekPv }}</div>
+          </div>
+          <div class="stats-item">
+            <div class="stats-label">本月访问量</div>
+            <div class="stats-value">{{ overview.monthPv }}</div>
+          </div>
+          <div class="stats-item">
             <div class="stats-label">有访问记录的页面数</div>
             <div class="stats-value">{{ overview.totalPages }}</div>
           </div>
@@ -127,6 +139,9 @@ const error = ref("");
 const overview = ref<VisitOverviewResponse>({
   totalPv: 0,
   totalPages: 0,
+  todayPv: 0,
+  weekPv: 0,
+  monthPv: 0,
   last30Days: [],
 });
 const items = ref<VisitPageItem[]>([]);
@@ -226,6 +241,9 @@ async function loadData() {
     overview.value = {
       totalPv: overviewRes.totalPv,
       totalPages: overviewRes.totalPages,
+      todayPv: overviewRes.todayPv ?? 0,
+      weekPv: overviewRes.weekPv ?? 0,
+      monthPv: overviewRes.monthPv ?? 0,
       last30Days: Array.isArray(overviewRes.last30Days)
         ? overviewRes.last30Days
         : [],
@@ -337,7 +355,7 @@ function renderChart() {
           color: "#0ea5e9",
         },
         symbol: "circle",
-        symbolSize: 6,
+        symbolSize: 3,
       },
     ],
   };
@@ -441,7 +459,7 @@ watch(
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -593,5 +611,11 @@ watch(
 .visit-tab-active {
   background-color: #0969da;
   color: #ffffff;
+}
+
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 </style>
