@@ -54,5 +54,5 @@ npm install
 
 ## 配置
 
-- [后端配置](https://cwd-docs.zishu.me/guide/backend-config.html)
-- [前端配置](https://cwd-docs.zishu.me/guide/frontend-config.html)
+- [后端配置](https://cwd.js.org/guide/backend-config.html)
+- [前端配置](https://cwd.js.org/guide/frontend-config.html)

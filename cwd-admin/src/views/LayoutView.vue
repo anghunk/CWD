@@ -17,7 +17,7 @@
       <div class="layout-title">CWD 评论后台</div>
       <div class="layout-actions-wrapper">
         <div class="layout-actions">
-          <a class="layout-button" href="https://cwd-docs.zishu.me" target="_blank">
+          <a class="layout-button" href="https://cwd.js.org" target="_blank">
             使用文档
           </a>
           <a class="layout-button" href="https://github.com/anghunk/cwd" target="_blank">
@@ -163,7 +163,7 @@ function goSettings() {
 }
 
 function openDocs() {
-  window.open("https://cwd-docs.zishu.me", "_blank");
+  window.open("https://cwd.js.org", "_blank");
   closeActions();
 }
 

@@ -17,7 +17,7 @@ onMounted(async () => {
   if (!window.CWDComments) {
     await new Promise((resolve, reject) => {
       const script = document.createElement("script");
-      script.src = "https://cwd.zishu.me/cwd.js";
+      script.src = "https://cwd.js.org/cwd.js";
       script.async = true;
       script.onload = () => resolve();
       script.onerror = (e) => reject(e);

@@ -33,6 +33,6 @@ npm run build
 
 ### 评论端
 
-如果使用官方评论端 js `https://cwd.zishu.me/cwd.js`，不需要更新。
+如果使用官方评论端 js `https://cwd.js.org/cwd.js`，不需要更新。
 
 如果你想自己托管，请下载仓库 `/cwd-admin/public` 中最新的 `cwd.js` 文件。
