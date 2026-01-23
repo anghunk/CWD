@@ -366,6 +366,8 @@ export class CWDComments {
 				replyContent: state.replyContent,
 				replyError: state.replyError,
 				submitting: state.submitting,
+				currentUser: state.form,
+				onUpdateUserInfo: (field, value) => this.store.updateFormField(field, value),
 				adminEmail: this.config.adminEmail,
 				adminBadge: this.config.adminBadge,
 				enableCommentLike: this.config.enableCommentLike !== false,
@@ -492,6 +494,7 @@ export class CWDComments {
 				replyContent: state.replyContent,
 				replyError: state.replyError,
 				submitting: state.submitting,
+				currentUser: state.form,
 			});
 		}
 	}

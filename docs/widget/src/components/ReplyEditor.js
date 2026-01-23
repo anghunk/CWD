@@ -19,12 +19,18 @@ export class ReplyEditor extends Component {
    */
   constructor(container, props = {}) {
     super(container, props);
+    const { currentUser } = props;
     this.state = {
-      content: props.content || ''
+      content: props.content || '',
+      // 如果没有昵称或邮箱，显示用户信息输入框。且一旦显示，在当前编辑器生命周期内保持显示，避免输入过程中消失
+      showUserInfo: !currentUser || !currentUser.name || !currentUser.email
     };
   }
 
   render() {
+    const { currentUser } = this.props;
+    const { showUserInfo } = this.state;
+
     const root = this.createElement('div', {
       className: 'cwd-reply-editor',
       children: [
@@ -43,6 +49,21 @@ export class ReplyEditor extends Component {
             })
           ]
         }),
+
+        // 用户信息输入框（当缺少信息时显示）
+        ...(showUserInfo ? [
+          this.createElement('div', {
+            className: 'cwd-form-row',
+            attributes: {
+              style: 'margin-bottom: 12px;'
+            },
+            children: [
+              this.createFormField('昵称 *', 'text', 'name', currentUser?.name),
+              this.createFormField('邮箱 *', 'email', 'email', currentUser?.email),
+              this.createFormField('网址', 'url', 'url', currentUser?.url)
+            ]
+          })
+        ] : []),
 
         // 文本框
         this.createElement('textarea', {
@@ -119,6 +140,12 @@ export class ReplyEditor extends Component {
       return;
     }
 
+    // 如果用户信息变化，重新渲染
+    if (JSON.stringify(this.props.currentUser) !== JSON.stringify(prevProps?.currentUser)) {
+      this.render();
+      return;
+    }
+
     // 如果有错误显示/隐藏变化，重新渲染
     if (this.props.error !== prevProps?.error) {
       this.render();
@@ -190,5 +217,29 @@ export class ReplyEditor extends Component {
     if (textarea) {
       textarea.focus();
     }
+  }
+
+  handleUserInfoChange(field, value) {
+    if (this.props.onUpdateUserInfo) {
+      this.props.onUpdateUserInfo(field, value);
+    }
+  }
+
+  createFormField(placeholder, type, field, value) {
+    return this.createElement('div', {
+      className: 'cwd-form-field',
+      children: [
+        this.createElement('input', {
+          className: 'cwd-form-input',
+          attributes: {
+            type,
+            placeholder,
+            value: value || '',
+            disabled: this.props.submitting,
+            onInput: (e) => this.handleUserInfoChange(field, e.target.value)
+          }
+        })
+      ]
+    });
   }
 }

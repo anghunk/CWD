@@ -204,6 +204,8 @@ export class CommentItem extends Component {
           content: this.props.replyContent,
           error: this.props.replyError,
           submitting: this.props.submitting,
+          currentUser: this.props.currentUser,
+          onUpdateUserInfo: this.props.onUpdateUserInfo,
           onUpdate: (content) => this.handleUpdateReplyContent(content),
           onSubmit: () => this.handleSubmitReply(),
           onCancel: () => this.handleCancelReply(),
@@ -229,6 +231,8 @@ export class CommentItem extends Component {
             replyContent: this.props.replyContent,
             replyError: this.props.replyError,
             submitting: this.props.submitting,
+            currentUser: this.props.currentUser,
+            onUpdateUserInfo: this.props.onUpdateUserInfo,
             adminEmail: this.props.adminEmail,
             adminBadge: this.props.adminBadge,
             enableCommentLike: this.props.enableCommentLike,
@@ -278,6 +282,8 @@ export class CommentItem extends Component {
           content: this.props.replyContent,
           error: this.props.replyError,
           submitting: this.props.submitting,
+          currentUser: this.props.currentUser,
+          onUpdateUserInfo: this.props.onUpdateUserInfo,
           onUpdate: (content) => this.handleUpdateReplyContent(content),
           onSubmit: () => this.handleSubmitReply(),
           onCancel: () => this.handleCancelReply(),
@@ -295,7 +301,8 @@ export class CommentItem extends Component {
       this.replyEditor.setProps({
         content: this.props.replyContent,
         error: this.props.replyError,
-        submitting: this.props.submitting
+        submitting: this.props.submitting,
+        currentUser: this.props.currentUser
       });
     }
 
@@ -307,6 +314,7 @@ export class CommentItem extends Component {
           replyContent: this.props.replyContent,
           replyError: this.props.replyError,
           submitting: this.props.submitting,
+          currentUser: this.props.currentUser,
           enableCommentLike: this.props.enableCommentLike,
           onLikeComment: this.props.onLikeComment
         });

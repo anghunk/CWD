@@ -95,6 +95,8 @@ export class CommentList extends Component {
           replyContent: this.props.replyContent,
           replyError: this.props.replyError,
           submitting: this.props.submitting,
+          currentUser: this.props.currentUser,
+          onUpdateUserInfo: this.props.onUpdateUserInfo,
           adminEmail: this.props.adminEmail,
           adminBadge: this.props.adminBadge,
           enableCommentLike: this.props.enableCommentLike,
@@ -159,7 +161,8 @@ export class CommentList extends Component {
     // 如果只是回复状态变化，局部更新 CommentItem 而不是完全重新渲染
     if (this.props.replyingTo !== prevProps.replyingTo ||
         this.props.replyError !== prevProps.replyError ||
-        this.props.submitting !== prevProps.submitting) {
+        this.props.submitting !== prevProps.submitting ||
+        this.props.currentUser !== prevProps.currentUser) {
       // 局部更新所有 CommentItem
       this.commentItems.forEach((commentItem) => {
         commentItem.setProps({
@@ -167,6 +170,7 @@ export class CommentList extends Component {
           replyContent: this.props.replyContent,
           replyError: this.props.replyError,
           submitting: this.props.submitting,
+          currentUser: this.props.currentUser,
           enableCommentLike: this.props.enableCommentLike,
           onLikeComment: (commentId, isLike) => this.handleLikeComment(commentId, isLike)
         });
