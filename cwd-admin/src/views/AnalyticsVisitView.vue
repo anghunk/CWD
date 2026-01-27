@@ -202,12 +202,13 @@ const overview = ref<VisitOverviewResponse>({
 const items = ref<VisitPageItem[]>([]);
 const visitTab = ref<"pv" | "latest">("pv");
 const visitTabStorageKey = "cwd-analytics-visit-tab";
+const chartRangeStorageKey = "cwd-analytics-visit-chart-range";
 
 const injectedDomainFilter = inject<Ref<string> | null>("domainFilter", null);
 const domainFilter = injectedDomainFilter ?? ref("");
 const last30Days = ref<{ date: string; total: number }[]>([]);
 const likeStatsItems = ref<LikeStatsItem[]>([]);
-const chartRange = ref<"7" | "30">("30");
+const chartRange = ref<"7" | "30">("7");
 
 const toastMessage = ref("");
 const toastType = ref<"success" | "error">("success");
@@ -314,6 +315,29 @@ function saveVisitTabToStorage(value: "pv" | "latest") {
   }
   try {
     window.localStorage.setItem(visitTabStorageKey, value);
+  } catch {
+  }
+}
+
+function loadChartRangeFromStorage() {
+  if (typeof window === "undefined") {
+    return;
+  }
+  try {
+    const value = window.localStorage.getItem(chartRangeStorageKey);
+    if (value === "7" || value === "30") {
+      chartRange.value = value;
+    }
+  } catch {
+  }
+}
+
+function saveChartRangeToStorage(value: "7" | "30") {
+  if (typeof window === "undefined") {
+    return;
+  }
+  try {
+    window.localStorage.setItem(chartRangeStorageKey, value);
   } catch {
   }
 }
@@ -451,6 +475,7 @@ function changeChartRange(range: "7" | "30") {
     return;
   }
   chartRange.value = range;
+  saveChartRangeToStorage(range);
   renderChart();
 }
 
@@ -462,6 +487,7 @@ function handleResize() {
 
 onMounted(() => {
   loadVisitTabFromStorage();
+  loadChartRangeFromStorage();
   loadData();
   window.addEventListener("resize", handleResize);
 });

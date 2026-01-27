@@ -125,7 +125,8 @@ const statsSummary = ref({
 });
 const domainStats = ref<DomainStat[]>([]);
 const last7Days = ref<{ date: string; total: number }[]>([]);
-const chartRange = ref<"7" | "30">("30");
+const chartRange = ref<"7" | "30">("7");
+const chartRangeStorageKey = "cwd-stats-chart-range";
 
 const injectedDomainFilter = inject<Ref<string> | null>("domainFilter", null);
 const domainFilter = injectedDomainFilter ?? ref("");
@@ -136,6 +137,29 @@ const toastVisible = ref(false);
 
 const chartEl = ref<HTMLDivElement | null>(null);
 let chartInstance: echarts.ECharts | null = null;
+
+function loadChartRangeFromStorage() {
+  if (typeof window === "undefined") {
+    return;
+  }
+  try {
+    const value = window.localStorage.getItem(chartRangeStorageKey);
+    if (value === "7" || value === "30") {
+      chartRange.value = value;
+    }
+  } catch {
+  }
+}
+
+function saveChartRangeToStorage(value: "7" | "30") {
+  if (typeof window === "undefined") {
+    return;
+  }
+  try {
+    window.localStorage.setItem(chartRangeStorageKey, value);
+  } catch {
+  }
+}
 
 function showToast(msg: string, type: "success" | "error" = "success") {
   toastMessage.value = msg;
@@ -235,6 +259,7 @@ function changeChartRange(range: "7" | "30") {
     return;
   }
   chartRange.value = range;
+  saveChartRangeToStorage(range);
   renderChart();
 }
 
@@ -245,6 +270,7 @@ function handleResize() {
 }
 
 onMounted(() => {
+  loadChartRangeFromStorage();
   loadStats();
   window.addEventListener("resize", handleResize);
 });
